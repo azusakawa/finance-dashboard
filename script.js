@@ -28,9 +28,91 @@ document.addEventListener('DOMContentLoaded', function() {
         resetZoomBtn: document.getElementById('reset-zoom-btn'),
         upColorInput: document.getElementById('up-color'),
         downColorInput: document.getElementById('down-color'),
-        editApiKeyBtn: document.getElementById('edit-api-key-btn'), // 新增編輯按鈕
+        editApiKeyBtn: document.getElementById('edit-api-key-btn'),
+        langSelect: document.getElementById('lang-select'), // 新增語言選擇器
     };
+    
+    /**
+     * 儲存所有可翻譯的字串。
+     * @type {Object}
+     */
+    const translations = {
+        'zh-Hant': {
+            title: '即時股票圖表',
+            language: '語言:',
+            apiKeyLabel: 'API 金鑰:',
+            apiKeyPlaceholder: '請輸入你的 Twelve Data API 金鑰',
+            apiKeySaved: 'API 金鑰已儲存！',
+            editButton: '編輯',
+            apiRegisterLink: '註冊 Twelve Data API 金鑰',
+            symbolLabel: '股票代號:',
+            symbolPlaceholder: '例如: AAPL, TSLA',
+            loadDataButton: '載入數據',
+            intervalLabel: '時間間隔:',
+            startDateLabel: '開始日期:',
+            endDateLabel: '結束日期:',
+            visualSettingsLabel: '視覺化設定:',
+            upColorLabel: '上漲 K 線:',
+            downColorLabel: '下跌 K 線:',
+            loadingText: '正在載入數據...',
+            zoomInButton: '放大 (+)',
+            zoomOutButton: '縮小 (-)',
+            resetZoomButton: '重設縮放 (R)',
+            toggleThemeButton: '亮色模式',
+            tooltipTime: '時間:',
+            tooltipOpen: '開盤:',
+            tooltipHigh: '最高:',
+            tooltipLow: '最低:',
+            tooltipClose: '收盤:',
+            tooltipEvent: '事件:',
+            tooltipEps: 'EPS:',
+            tooltipSplit: '股票分割:',
+            errorNoApiKey: '錯誤：請先輸入你的 API 金鑰！',
+            errorInvalidApiKey: 'API 金鑰無效或已過期。請檢查金鑰。',
+            errorNoSymbol: '錯誤：請輸入股票代號！',
+            errorApi: '載入數據時發生錯誤：',
+        },
+        'en': {
+            title: 'Real-time Stock Chart',
+            language: 'Language:',
+            apiKeyLabel: 'API Key:',
+            apiKeyPlaceholder: 'Enter your Twelve Data API Key',
+            apiKeySaved: 'API Key saved!',
+            editButton: 'Edit',
+            apiRegisterLink: 'Register for Twelve Data API Key',
+            symbolLabel: 'Symbol:',
+            symbolPlaceholder: 'e.g., AAPL, TSLA',
+            loadDataButton: 'Load Data',
+            intervalLabel: 'Interval:',
+            startDateLabel: 'Start Date:',
+            endDateLabel: 'End Date:',
+            visualSettingsLabel: 'Visualization Settings:',
+            upColorLabel: 'Up Color:',
+            downColorLabel: 'Down Color:',
+            loadingText: 'Loading data...',
+            zoomInButton: 'Zoom In (+)',
+            zoomOutButton: 'Zoom Out (-)',
+            resetZoomButton: 'Reset Zoom (R)',
+            toggleThemeButton: 'Light Mode',
+            tooltipTime: 'Time:',
+            tooltipOpen: 'Open:',
+            tooltipHigh: 'High:',
+            tooltipLow: 'Low:',
+            tooltipClose: 'Close:',
+            tooltipEvent: 'Event:',
+            tooltipEps: 'EPS:',
+            tooltipSplit: 'Stock Split:',
+            errorNoApiKey: 'Error: Please enter your API key first!',
+            errorInvalidApiKey: 'Invalid or expired API key. Please check your key.',
+            errorNoSymbol: 'Error: Please enter a stock symbol!',
+            errorApi: 'Error loading data:',
+        }
+    };
+    
+    /** @type {string} 當前選中的語言 */
+    let currentLanguage = 'zh-Hant';
 
+    // ... (其餘的變數、圖表初始化、setupPriceScales 函式等保持不變) ...
     /** @type {string} 當前選中的時間間隔 */
     let currentInterval = '1day';
     /** @type {boolean} 當前是否為暗色模式 */
@@ -42,9 +124,6 @@ document.addEventListener('DOMContentLoaded', function() {
     /** @type {Array<Object>} 原始成交量數據，用於顏色更新 */
     let originalVolumeData = [];
 
-    // --- 圖表初始化與設定 ---
-
-    /** Lightweight Charts 圖表實例 */
     const chartInstance = LightweightCharts.createChart(DOMElements.chartContainer, {
         width: DOMElements.chartContainer.offsetWidth,
         height: DOMElements.chartContainer.offsetHeight,
@@ -58,7 +137,6 @@ document.addEventListener('DOMContentLoaded', function() {
         },
     });
 
-    /** 圖表中的 K 線與成交量系列 */
     const series = {
         candle: chartInstance.addCandlestickSeries({
             upColor: DOMElements.upColorInput.value,
@@ -79,10 +157,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }),
     };
 
-    /**
-     * 設定圖表的價格軸。
-     * 將 K 線圖和成交量圖分別分配不同的空間比例。
-     */
     function setupPriceScales() {
         chartInstance.priceScale('price-scale').applyOptions({
             scaleMargins: {
@@ -100,19 +174,32 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- API 服務模組 ---
+
+    // --- 輔助函式 - 語言切換 ---
+
+    /**
+     * 根據當前語言更新頁面上所有帶有 data-i18n 屬性的文字。
+     */
+    function setLanguage() {
+        document.querySelectorAll('[data-i18n]').forEach(element => {
+            const key = element.getAttribute('data-i18n');
+            if (translations[currentLanguage][key]) {
+                element.textContent = translations[currentLanguage][key];
+            }
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+            const key = element.getAttribute('data-i18n-placeholder');
+            if (translations[currentLanguage][key]) {
+                element.placeholder = translations[currentLanguage][key];
+            }
+        });
+        // 額外處理 theme toggle 按鈕的文字
+        DOMElements.themeToggleBtn.textContent = translations[currentLanguage][isDarkMode ? 'toggleThemeButton' : 'toggleThemeButton'].replace('亮色模式', '暗色模式').replace('Light Mode', 'Dark Mode');
+    }
+
+    // --- API 服務模組 (無變動) ---
 
     const apiService = {
-        /**
-         * 從 Twelve Data API 獲取時間序列數據 (K 線與成交量)。
-         * @param {string} symbol - 股票代號。
-         * @param {string} interval - 時間間隔 (e.g., '1day', '1week')。
-         * @param {string} startDate - 開始日期 (格式 YYYY-MM-DD)。
-         * @param {string} endDate - 結束日期 (格式 YYYY-MM-DD)。
-         * @param {string} apiKey - Twelve Data API 金鑰。
-         * @returns {Promise<Object>} API 回傳的數據。
-         * @throws {Error} 當 API 呼叫失敗時。
-         */
         fetchTimeSeries: async (symbol, interval, startDate, endDate, apiKey) => {
             let apiUrl;
             if (startDate && endDate) {
@@ -128,23 +215,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             const data = await response.json();
             if (data.status === 'error') {
-                 // 針對 API 金鑰錯誤做更明確的處理
                  if (data.code === 401 || data.code === 402) {
-                    throw new Error('API 金鑰無效或已過期。請檢查金鑰。');
+                    throw new Error(translations[currentLanguage].errorInvalidApiKey);
                  }
-                 throw new Error(`API 回應錯誤：${data.message}`);
+                 throw new Error(`${translations[currentLanguage].errorApi}${data.message}`);
             }
             return data;
         },
         
-        /**
-         * 從 Twelve Data API 獲取財報與股票分割事件數據。
-         * @param {string} symbol - 股票代號。
-         * @param {string} startDate - 開始日期。
-         * @param {string} endDate - 結束日期。
-         * @param {string} apiKey - Twelve Data API 金鑰。
-         * @returns {Promise<Object>} 包含財報與股票分割數據的物件。
-         */
         fetchEvents: async (symbol, startDate, endDate, apiKey) => {
             const [earningsResponse, splitsResponse] = await Promise.all([
                 fetch(`https://api.twelvedata.com/earnings_calendar?symbol=${symbol}&start_date=${startDate || ''}&end_date=${endDate || ''}&apikey=${apiKey}`),
@@ -159,13 +237,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return { earningsData, splitsData };
         },
 
-        /**
-         * 獲取股票代號自動完成建議。
-         * @param {string} query - 使用者輸入的查詢字串。
-         * @param {string} apiKey - Twelve Data API 金鑰。
-         * @returns {Promise<Object>} 包含建議清單的數據。
-         * @throws {Error} 當 API 呼叫失敗時。
-         */
         fetchAutocomplete: async (query, apiKey) => {
             const apiUrl = `https://api.twelvedata.com/symbol_search?symbol=${query}&outputsize=10&apikey=${apiKey}`;
             const response = await fetch(apiUrl);
@@ -179,14 +250,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- UI 處理模組 ---
 
     const uiHandler = {
-        /**
-         * 根據是否為暗色模式切換頁面主題。
-         * @param {boolean} isDark - 是否為暗色模式。
-         */
         applyTheme: (isDark) => {
             document.body.classList.toggle('light-theme', !isDark);
             
-            // 由於 chartInstance 的顏色需要直接設定，這裡需要從 CSS 變數讀取
             chartInstance.applyOptions({
                 layout: {
                     background: { type: 'solid', color: getComputedStyle(document.body).getPropertyValue('--control-group-bg') },
@@ -197,12 +263,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     horzLines: { color: getComputedStyle(document.body).getPropertyValue('--chart-grid-color') },
                 },
             });
-            DOMElements.themeToggleBtn.textContent = isDark ? '亮色模式' : '暗色模式';
+            
+            DOMElements.themeToggleBtn.textContent = translations[currentLanguage][isDark ? 'toggleThemeButton' : 'toggleThemeButton'].replace('亮色模式', '暗色模式').replace('Light Mode', 'Dark Mode');
         },
 
-        /**
-         * 根據顏色選擇器更新圖表的 K 線與成交量顏色。
-         */
         updateChartColors: () => {
             const upColor = DOMElements.upColorInput.value;
             const downColor = DOMElements.downColorInput.value;
@@ -226,43 +290,26 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.setItem('downColor', downColor);
         },
 
-        /**
-         * 顯示錯誤訊息。
-         * @param {string} message - 要顯示的錯誤訊息。
-         */
         showError: (message) => {
             DOMElements.errorMessageContainer.textContent = message;
             DOMElements.errorMessageContainer.style.display = 'block';
         },
 
-        /**
-         * 隱藏錯誤訊息。
-         */
         hideError: () => {
             DOMElements.errorMessageContainer.style.display = 'none';
         },
 
-        /**
-         * 顯示載入指示器。
-         */
         showLoading: () => {
             DOMElements.chartContainer.classList.add('loading');
             DOMElements.loadingIndicator.style.display = 'block';
-            DOMElements.loadingIndicator.innerHTML = '<div class="loader"></div><span>正在載入數據...</span>';
+            DOMElements.loadingIndicator.innerHTML = `<div class="loader"></div><span>${translations[currentLanguage].loadingText}</span>`;
         },
 
-        /**
-         * 隱藏載入指示器。
-         */
         hideLoading: () => {
             DOMElements.chartContainer.classList.remove('loading');
             DOMElements.loadingIndicator.style.display = 'none';
         },
 
-        /**
-         * 在自動完成結果區塊顯示建議清單。
-         * @param {Object} results - 包含建議數據的物件。
-         */
         displayAutocompleteResults: (results) => {
             const { autocompleteResults, symbolInput, loadDataBtn } = DOMElements;
             autocompleteResults.innerHTML = '';
@@ -284,14 +331,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         },
 
-        /**
-         * 根據是否有 API 金鑰切換輸入框和狀態訊息的顯示。
-         * @param {boolean} hasApiKey - 是否已儲存 API 金鑰。
-         */
         toggleApiKeyInputState: (hasApiKey) => {
             DOMElements.apiKeyInput.style.display = hasApiKey ? 'none' : 'inline';
             DOMElements.apiKeyStatus.style.display = hasApiKey ? 'inline-flex' : 'none';
-            // 如果金鑰輸入框可見，自動聚焦
             if (!hasApiKey) {
                 DOMElements.apiKeyInput.focus();
             }
@@ -300,27 +342,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- 主程式邏輯 ---
 
-    /**
-     * 載入所有圖表數據，包括 K 線、成交量和事件標記。
-     * @param {string} symbol - 股票代號。
-     * @param {string} interval - 時間間隔。
-     * @param {string} startDate - 開始日期。
-     * @param {string} endDate - 結束日期。
-     * @param {string} apiKey - API 金鑰。
-     */
     async function loadAllData(symbol, interval, startDate, endDate, apiKey) {
         uiHandler.hideError();
         uiHandler.hideLoading();
         DOMElements.autocompleteResults.style.display = 'none';
 
         if (!apiKey || apiKey.trim() === '') {
-            uiHandler.showError('錯誤：請先輸入你的 API 金鑰！');
-            // 如果沒有金鑰，保持輸入框可見
+            uiHandler.showError(translations[currentLanguage].errorNoApiKey);
             uiHandler.toggleApiKeyInputState(false);
             return;
         }
         if (!symbol || symbol.trim() === '') {
-            uiHandler.showError('錯誤：請輸入股票代號！');
+            uiHandler.showError(translations[currentLanguage].errorNoSymbol);
             return;
         }
 
@@ -330,7 +363,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const timeSeriesData = await apiService.fetchTimeSeries(symbol, interval, startDate, endDate, apiKey);
             const { earningsData, splitsData } = await apiService.fetchEvents(symbol, startDate, endDate, apiKey);
 
-            // 格式化 K 線數據
             const formattedCandleData = timeSeriesData.values
                 .map(item => ({
                     time: item.datetime,
@@ -342,7 +374,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 .filter(item => item.open !== null && item.high !== null && item.low !== null && item.close !== null)
                 .reverse();
 
-            // 格式化成交量數據
             originalVolumeData = timeSeriesData.values
                 .map(item => ({
                     time: item.datetime,
@@ -360,33 +391,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 color: item.open > item.close ? downColor : upColor
             }));
 
-            // 更新圖表系列
             series.candle.setData(formattedCandleData);
             lastLoadedDataCount = formattedCandleData.length;
             series.volume.setData(formattedVolumeData);
 
-            // 處理事件標記
             const markers = [];
             if (earningsData.status !== 'error' && earningsData.earnings_calendar) {
-                earningsData.earnings_calendar.forEach(earning => markers.push({ time: earning.datetime.substring(0, 10), position: 'inBar', color: '#2962FF', shape: 'circle', text: `EPS: ${earning.eps_estimate || 'N/A'}` }));
+                earningsData.earnings_calendar.forEach(earning => markers.push({ time: earning.datetime.substring(0, 10), position: 'inBar', color: '#2962FF', shape: 'circle', text: `${translations[currentLanguage].tooltipEps} ${earning.eps_estimate || 'N/A'}` }));
             }
             if (splitsData.status !== 'error' && splitsData.splits_calendar) {
-                splitsData.splits_calendar.forEach(split => markers.push({ time: split.datetime.substring(0, 10), position: 'inBar', color: '#FF6D00', shape: 'arrowUp', text: `股票分割: ${split.new_shares} for ${split.old_shares}` }));
+                splitsData.splits_calendar.forEach(split => markers.push({ time: split.datetime.substring(0, 10), position: 'inBar', color: '#FF6D00', shape: 'arrowUp', text: `${translations[currentLanguage].tooltipSplit} ${split.new_shares} for ${split.old_shares}` }));
             }
             markersData = markers;
             series.candle.setMarkers(markersData);
             
-            // 儲存狀態到 localStorage
             localStorage.setItem('twelveDataApiKey', apiKey);
             localStorage.setItem('lastSymbol', symbol);
             
-            // 成功載入數據後，隱藏輸入框並顯示狀態
             uiHandler.toggleApiKeyInputState(true);
 
         } catch (error) {
             console.error('載入數據時發生錯誤:', error);
-            uiHandler.showError(`載入數據時發生錯誤：${error.message}`);
-            // 如果 API 呼叫失敗，顯示輸入框
+            uiHandler.showError(`${translations[currentLanguage].errorApi} ${error.message}`);
             uiHandler.toggleApiKeyInputState(false);
         } finally {
             uiHandler.hideLoading();
@@ -395,12 +421,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // --- 助手函式 ---
 
-    /**
-     * 函式去抖動 (debounce) 函式。
-     * @param {Function} func - 要去抖動的函式。
-     * @param {number} delay - 延遲時間（毫秒）。
-     * @returns {Function} 去抖動後的函式。
-     */
     function debounce(func, delay) {
         let timeout;
         return function(...args) {
@@ -427,9 +447,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- 事件監聽器設定 ---
 
-    /**
-     * 設定所有 DOM 元素的事件監聽器。
-     */
     function setupEventListeners() {
         window.addEventListener('resize', () => {
             chartInstance.applyOptions({
@@ -510,7 +527,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         DOMElements.resetZoomBtn.addEventListener('click', () => {
-            const defaultVisibleBars = 120;
+            const defaultVisibleBars = 90;
             if (lastLoadedDataCount > 0) {
                 const logicalRange = {
                     from: Math.max(0, lastLoadedDataCount - defaultVisibleBars),
@@ -532,9 +549,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const marker = markersData.find(m => m.time === time);
 
             if (marker) {
-                DOMElements.tooltipContainer.innerHTML = `<b>時間:</b> ${marker.time}<br><b>事件:</b> ${marker.text}`;
+                DOMElements.tooltipContainer.innerHTML = `<b>${translations[currentLanguage].tooltipTime}</b> ${marker.time}<br><b>${translations[currentLanguage].tooltipEvent}</b> ${marker.text}`;
             } else if (candleData) {
-                DOMElements.tooltipContainer.innerHTML = `<b>時間:</b> ${candleData.time}<br><b>開盤:</b> ${candleData.open.toFixed(2)}<br><b>最高:</b> ${candleData.high.toFixed(2)}<br><b>最低:</b> ${candleData.low.toFixed(2)}<br><b>收盤:</b> ${candleData.close.toFixed(2)}`;
+                DOMElements.tooltipContainer.innerHTML = `<b>${translations[currentLanguage].tooltipTime}</b> ${candleData.time}<br><b>${translations[currentLanguage].tooltipOpen}</b> ${candleData.open.toFixed(2)}<br><b>${translations[currentLanguage].tooltipHigh}</b> ${candleData.high.toFixed(2)}<br><b>${translations[currentLanguage].tooltipLow}</b> ${candleData.low.toFixed(2)}<br><b>${translations[currentLanguage].tooltipClose}</b> ${candleData.close.toFixed(2)}`;
             } else {
                 DOMElements.tooltipContainer.style.display = 'none';
                 return;
@@ -557,22 +574,33 @@ document.addEventListener('DOMContentLoaded', function() {
         DOMElements.upColorInput.addEventListener('input', uiHandler.updateChartColors);
         DOMElements.downColorInput.addEventListener('input', uiHandler.updateChartColors);
         
-        // 新增：處理編輯 API 金鑰按鈕點擊事件
         DOMElements.editApiKeyBtn.addEventListener('click', () => {
             uiHandler.toggleApiKeyInputState(false);
             DOMElements.apiKeyInput.value = '';
             localStorage.removeItem('twelveDataApiKey');
         });
+
+        // 新增：語言選擇器的事件監聽器
+        DOMElements.langSelect.addEventListener('change', (e) => {
+            currentLanguage = e.target.value;
+            localStorage.setItem('language', currentLanguage);
+            setLanguage();
+            // 由於 themeToggleBtn 的文字需要特別處理，所以這裡需要更新
+            uiHandler.applyTheme(isDarkMode); 
+        });
     }
 
     // --- 啟動函式 ---
 
-    /**
-     * 應用程式的初始化入口點。
-     * 在 DOM 載入完成後執行。
-     */
     function initApp() {
-        // 從 localStorage 載入使用者設定
+        // 從 localStorage 載入語言設定，否則使用預設
+        const savedLanguage = localStorage.getItem('language');
+        if (savedLanguage && translations[savedLanguage]) {
+            currentLanguage = savedLanguage;
+            DOMElements.langSelect.value = savedLanguage;
+        }
+        setLanguage(); // 在啟動時設定一次語言
+
         const savedApiKey = localStorage.getItem('twelveDataApiKey');
         if (savedApiKey) {
             DOMElements.apiKeyInput.value = savedApiKey;
@@ -591,7 +619,7 @@ document.addEventListener('DOMContentLoaded', function() {
             isDarkMode = (savedIsDarkMode === 'true');
             uiHandler.applyTheme(isDarkMode);
         } else {
-            uiHandler.applyTheme(isDarkMode); // 首次載入時設定預設暗色模式
+            uiHandler.applyTheme(isDarkMode);
         }
 
         const savedInterval = localStorage.getItem('chartInterval');
@@ -616,16 +644,13 @@ document.addEventListener('DOMContentLoaded', function() {
             uiHandler.updateChartColors();
         }
 
-        // 設定圖表並註冊事件監聽器
         setupPriceScales();
         setupEventListeners();
 
-        // 如果有儲存的 API 金鑰和股票代號，則自動載入數據
         if (savedApiKey && savedSymbol) {
             loadAllData(DOMElements.symbolInput.value, currentInterval, '', '', savedApiKey);
         }
     }
 
-    // 啟動應用程式
     initApp();
 });

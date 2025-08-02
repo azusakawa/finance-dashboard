@@ -3,57 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>即時股票圖表</title>
+    <title data-i18n="title"></title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body class="dark-theme">
 
     <div class="container">
-        <h1>即時股票圖表</h1>
+        <header class="page-header">
+            <h1 data-i18n="title"></h1>
+            <div class="language-selector">
+                <label for="lang-select" data-i18n="language"></label>
+                <select id="lang-select">
+                    <option value="zh-Hant">繁體中文</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+        </header>
 
         <div class="control-group">
             <div class="input-item api-key-input-container">
-                <label for="api-key-input">API 金鑰:</label>
-                <input type="text" id="api-key-input" placeholder="請輸入你的 Twelve Data API 金鑰">
+                <label for="api-key-input" data-i18n="apiKeyLabel"></label>
+                <input type="text" id="api-key-input" data-i18n-placeholder="apiKeyPlaceholder">
                 <span id="api-key-status">
-                    <span>API 金鑰已儲存！</span>
-                    <button id="edit-api-key-btn" class="secondary-btn">編輯</button>
+                    <span data-i18n="apiKeySaved"></span>
+                    <button id="edit-api-key-btn" class="secondary-btn" data-i18n="editButton"></button>
                 </span>
             </div>
-            <a href="https://twelvedata.com/register" target="_blank" class="api-link">註冊 Twelve Data API 金鑰</a>
+            <a href="https://twelvedata.com/register" target="_blank" class="api-link" data-i18n="apiRegisterLink"></a>
         </div>
 
         <div class="control-group">
             <div class="input-item symbol-input-container">
-                <label for="symbol-input">股票代號:</label>
-                <input type="text" id="symbol-input" placeholder="例如: AAPL, TSLA">
+                <label for="symbol-input" data-i18n="symbolLabel"></label>
+                <input type="text" id="symbol-input" data-i18n-placeholder="symbolPlaceholder">
                 <div id="autocomplete-results"></div>
             </div>
-            <button id="load-data-btn" class="primary-btn">載入數據</button>
+            <button id="load-data-btn" class="primary-btn" data-i18n="loadDataButton"></button>
         </div>
 
         <div class="control-group interval-buttons">
-            <label>時間間隔:</label>
+            <label data-i18n="intervalLabel"></label>
             <button class="interval-btn active" data-interval="1day">1D</button>
             <button class="interval-btn" data-interval="1week">1W</button>
             <button class="interval-btn" data-interval="1month">1M</button>
             <div class="date-range">
-                <label for="start-date">開始日期:</label>
-                <input type="date" id="start-date">
-                <label for="end-date">結束日期:</label>
-                <input type="date" id="end-date">
+                <div class="input-item">
+                    <label for="start-date" data-i18n="startDateLabel"></label>
+                    <input type="date" id="start-date">
+                </div>
+                <div class="input-item">
+                    <label for="end-date" data-i18n="endDateLabel"></label>
+                    <input type="date" id="end-date">
+                </div>
             </div>
         </div>
 
         <div class="control-group">
-            <label>視覺化設定:</label>
+            <label data-i18n="visualSettingsLabel"></label>
             <div class="color-picker-group">
-                <label for="up-color">上漲 K 線:</label>
+                <label for="up-color" data-i18n="upColorLabel"></label>
                 <input type="color" id="up-color" value="#26a69a">
             </div>
             <div class="color-picker-group">
-                <label for="down-color">下跌 K 線:</label>
+                <label for="down-color" data-i18n="downColorLabel"></label>
                 <input type="color" id="down-color" value="#ef5350">
             </div>
         </div>
@@ -62,16 +75,16 @@
             <div id="tooltip-container"></div>
             <div id="loading-indicator">
                 <div class="loader"></div>
-                <span>正在載入數據...</span>
+                <span data-i18n="loadingText"></span>
             </div>
         </div>
         
         <div class="control-group">
-            <button id="zoom-in-btn" class="secondary-btn">放大 (+)</button>
-            <button id="zoom-out-btn" class="secondary-btn">縮小 (-)</button>
-            <button id="reset-zoom-btn" class="secondary-btn">重設縮放 (R)</button>
+            <button id="zoom-in-btn" class="secondary-btn" data-i18n="zoomInButton"></button>
+            <button id="zoom-out-btn" class="secondary-btn" data-i18n="zoomOutButton"></button>
+            <button id="reset-zoom-btn" class="secondary-btn" data-i18n="resetZoomButton"></button>
             <div style="flex-grow: 1;"></div>
-            <button id="theme-toggle-btn" class="secondary-btn">亮色模式</button>
+            <button id="theme-toggle-btn" class="secondary-btn" data-i18n="toggleThemeButton"></button>
         </div>
 
         <div id="error-message"></div>
