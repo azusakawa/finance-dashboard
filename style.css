@@ -1,0 +1,378 @@
+/*
+  ==============================================
+  CSS 變數 - 顏色、間距、圓角等通用設定
+  ==============================================
+*/
+
+:root {
+    /* 暗色主題顏色變數 */
+    --background-color: #121212;
+    --text-color: #e0e0e0;
+    --primary-color: #007bff; /* 主要按鈕顏色 */
+    --control-group-bg: #1e1e1e; /* 控制面板背景色 */
+    --border-color: #555;
+    --input-bg: #222;
+    --input-color: #f1f1f1;
+    --button-bg: #333;
+    --button-color: #f1f1f1;
+    --button-hover-bg: #555;
+    --button-hover-border: #777;
+    --secondary-button-bg: #444;
+    --link-color: #0096ff;
+    --chart-grid-color: rgba(70, 70, 70, 0.5);
+    --tooltip-bg: rgba(255, 255, 255, 0.9);
+    --tooltip-color: #191919;
+    --autocomplete-bg: #1e1e1e;
+    --autocomplete-hover-bg: #3a3a3a;
+    --error-message-bg: rgba(255, 0, 0, 0.2);
+    --error-message-color: #ffcccc;
+
+    /* 亮色主題顏色變數 (透過 .light-theme class 覆蓋) */
+    --light-background-color: #f0f2f5;
+    --light-text-color: #333;
+    --light-primary-color: #0056b3;
+    --light-control-group-bg: #ffffff;
+    --light-border-color: #ccc;
+    --light-input-bg: #fdfdfd;
+    --light-input-color: #333;
+    --light-button-bg: #e9ecef;
+    --light-button-color: #333;
+    --light-button-hover-bg: #d4d4d4;
+    --light-button-hover-border: #999;
+    --light-secondary-button-bg: #e2e6ea;
+    --light-link-color: #0069d9;
+    --light-chart-grid-color: rgba(215, 215, 215, 0.5);
+    --light-tooltip-bg: rgba(0, 0, 0, 0.9);
+    --light-tooltip-color: #f1f1f1;
+    --light-autocomplete-bg: #ffffff;
+    --light-autocomplete-hover-bg: #f0f0f0;
+    --light-error-message-bg: rgba(255, 0, 0, 0.1);
+    --light-error-message-color: #ff0000;
+
+    /* 邊距與間距變數 */
+    --gap-sm: 8px;
+    --gap-md: 15px;
+    --gap-lg: 25px;
+    --padding-md: 15px;
+
+    /* 圓角變數 */
+    --border-radius: 8px;
+
+    /* 過渡效果 */
+    --transition-speed: 0.3s ease;
+}
+
+/* 亮色主題樣式，覆蓋暗色主題變數 */
+.light-theme {
+    --background-color: var(--light-background-color);
+    --text-color: var(--light-text-color);
+    --primary-color: var(--light-primary-color);
+    --control-group-bg: var(--light-control-group-bg);
+    --border-color: var(--light-border-color);
+    --input-bg: var(--light-input-bg);
+    --input-color: var(--light-input-color);
+    --button-bg: var(--light-button-bg);
+    --button-color: var(--light-button-color);
+    --button-hover-bg: var(--light-button-hover-bg);
+    --button-hover-border: var(--light-button-hover-border);
+    --secondary-button-bg: var(--light-secondary-button-bg);
+    --link-color: var(--light-link-color);
+    --chart-grid-color: var(--light-chart-grid-color);
+    --tooltip-bg: var(--light-tooltip-bg);
+    --tooltip-color: var(--light-tooltip-color);
+    --autocomplete-bg: var(--light-autocomplete-bg);
+    --autocomplete-hover-bg: var(--light-autocomplete-hover-bg);
+    --error-message-bg: var(--light-error-message-bg);
+    --error-message-color: var(--light-error-message-color);
+}
+
+/*
+  ==============================================
+  通用樣式
+  ==============================================
+*/
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--gap-lg);
+}
+
+h1 {
+    text-align: center;
+    color: var(--text-color);
+    margin-bottom: var(--gap-lg);
+    font-size: clamp(2rem, 5vw, 3rem);
+}
+
+.control-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: var(--gap-md);
+    margin-bottom: var(--gap-lg);
+    padding: var(--padding-md);
+    background-color: var(--control-group-bg);
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transition: background-color var(--transition-speed);
+}
+
+.input-item {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+    position: relative;
+}
+
+.date-range {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-md);
+}
+
+.api-link {
+    color: var(--link-color);
+    text-decoration: none;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.api-link:hover {
+    text-decoration: underline;
+}
+
+label {
+    white-space: nowrap;
+}
+
+input[type="text"], input[type="date"], input[type="color"] {
+    padding: 8px 15px;
+    border: 1px solid var(--border-color);
+    background-color: var(--input-bg);
+    color: var(--input-color);
+    border-radius: 4px;
+    font-size: 14px;
+    transition: background-color var(--transition-speed), border-color var(--transition-speed), color var(--transition-speed);
+}
+
+input[type="text"]:focus, input[type="date"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+input[type="color"] {
+    width: 40px;
+    height: 30px;
+    padding: 3px;
+    cursor: pointer;
+    background: var(--input-bg);
+}
+
+/*
+  ==============================================
+  按鈕樣式
+  ==============================================
+*/
+button {
+    padding: 8px 15px;
+    border: 1px solid var(--border-color);
+    background-color: var(--button-bg);
+    color: var(--button-color);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color var(--transition-speed), color var(--transition-speed), border-color var(--transition-speed);
+    white-space: nowrap;
+}
+
+button:hover {
+    background-color: var(--button-hover-bg);
+    border-color: var(--button-hover-border);
+}
+
+.primary-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.primary-btn:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+.secondary-btn {
+    background-color: var(--secondary-button-bg);
+    color: var(--text-color);
+}
+
+.secondary-btn:hover {
+    background-color: var(--button-hover-bg);
+}
+
+.interval-buttons button.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/*
+  ==============================================
+  訊息與提示樣式
+  ==============================================
+*/
+#api-key-status {
+    color: #4CAF50;
+    font-size: 14px;
+    display: flex; /* 改成 flex */
+    align-items: center; /* 新增此行 */
+    gap: var(--gap-sm); /* 新增間距 */
+    white-space: nowrap;
+}
+
+#api-key-status button {
+    /* 移除按鈕與文字之間的間距 */
+    margin-left: 0;
+}
+
+#error-message {
+    text-align: center;
+    color: var(--error-message-color);
+    background-color: var(--error-message-bg);
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: var(--gap-md);
+    display: none;
+    font-weight: bold;
+}
+
+/*
+  ==============================================
+  自動完成樣式
+  ==============================================
+*/
+.symbol-input-container {
+    position: relative;
+}
+
+#autocomplete-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: var(--autocomplete-bg);
+    border: 1px solid var(--border-color);
+    border-top: none;
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 10;
+    display: none;
+}
+
+#autocomplete-results div {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color var(--transition-speed);
+}
+
+#autocomplete-results div:last-child {
+    border-bottom: none;
+}
+
+#autocomplete-results div:hover {
+    background-color: var(--autocomplete-hover-bg);
+}
+
+/*
+  ==============================================
+  圖表與載入指示器樣式
+  ==============================================
+*/
+#chart-container {
+    width: 100%;
+    height: 600px;
+    background-color: var(--control-group-bg);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    position: relative;
+    transition: background-color var(--transition-speed);
+}
+
+#chart-container.loading {
+    filter: blur(2px);
+    transition: filter 0.5s ease;
+}
+
+#tooltip-container {
+    position: absolute;
+    z-index: 1000;
+    padding: 10px;
+    background-color: var(--tooltip-bg);
+    color: var(--tooltip-color);
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    display: none;
+    pointer-events: none;
+    transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+#loading-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    display: none;
+    padding: 20px 30px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: var(--border-radius);
+    color: white;
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+    .control-group {
+        flex-direction: column;
+        gap: var(--gap-sm);
+    }
+    .date-range {
+        flex-direction: column;
+        width: 100%; /* 確保日期選擇器獨佔一行 */
+    }
+    .date-range input {
+        width: 100%;
+    }
+    button, input {
+        font-size: 16px; /* 提升可讀性 */
+    }
+}
