@@ -1,227 +1,245 @@
-/*
-  ==============================================
-  CSS 變數 - 顏色、間距、圓角等通用設定
-  ==============================================
-*/
-
-:root {
-    /* 暗色主題顏色變數 */
-    --background-color: #121212;
-    --text-color: #e0e0e0;
-    --primary-color: #007bff; /* 主要按鈕顏色 */
-    --control-group-bg: #1e1e1e; /* 控制面板背景色 */
-    --border-color: #555;
-    --input-bg: #222;
-    --input-color: #f1f1f1;
-    --button-bg: #333;
-    --button-color: #f1f1f1;
-    --button-hover-bg: #555;
-    --button-hover-border: #777;
-    --secondary-button-bg: #444;
-    --link-color: #0096ff;
-    --chart-grid-color: rgba(70, 70, 70, 0.5);
-    --tooltip-bg: rgba(255, 255, 255, 0.9);
-    --tooltip-color: #191919;
-    --autocomplete-bg: #1e1e1e;
-    --autocomplete-hover-bg: #3a3a3a;
-    --error-message-bg: rgba(255, 0, 0, 0.2);
-    --error-message-color: #ffcccc;
-
-    /* 通用間距與圓角 */
-    --gap-sm: 8px;
-    --gap-md: 15px;
-    --gap-lg: 25px;
-    --border-radius: 8px;
-    --transition-speed: 0.3s;
-}
-
-/* 亮色主題顏色變數 */
-.light-theme {
-    --background-color: #f0f2f5;
-    --text-color: #1a1a1a;
-    --primary-color: #007bff;
-    --control-group-bg: #ffffff;
-    --border-color: #ccc;
-    --input-bg: #f8f9fa;
-    --input-color: #1a1a1a;
-    --button-bg: #e9ecef;
-    --button-color: #333;
-    --button-hover-bg: #dee2e6;
-    --button-hover-border: #adb5bd;
-    --secondary-button-bg: #e9ecef;
-    --link-color: #0056b3;
-    --chart-grid-color: rgba(215, 215, 215, 0.5);
-    --tooltip-bg: rgba(0, 0, 0, 0.8);
-    --tooltip-color: #ffffff;
-    --autocomplete-bg: #ffffff;
-    --autocomplete-hover-bg: #f0f0f0;
-    --error-message-bg: rgba(255, 0, 0, 0.1);
-    --error-message-color: #ff3333;
-}
-
-/*
-  ==============================================
-  通用樣式
-  ==============================================
-*/
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--background-color);
-    color: var(--text-color);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', sans-serif;
+    background-color: #131722;
+    /* 更深的背景 /
+color: #d1d4dc; / 更柔和的文字顏色 */
     margin: 0;
     padding: 0;
-    transition: background-color var(--transition-speed), color var(--transition-speed);
+    line-height: 1.5;
+}
+
+.light-theme {
+    background-color: #f0f3fa;
+    color: #1c1e21;
+}
+
+.light-theme h1,
+.light-theme label {
+    color: #1c1e21;
+}
+
+.light-theme .control-group {
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e0e3eb;
+}
+
+.light-theme input,
+.light-theme select {
+    background-color: #fff;
+    color: #1c1e21;
+    border: 1px solid #e0e3eb;
+}
+
+.light-theme button {
+    background-color: #f5f8fa;
+    color: #1c1e21;
+    border: 1px solid #e0e3eb;
+}
+
+.light-theme button:hover {
+    background-color: #e0e3eb;
+}
+
+.light-theme .secondary-btn {
+    background-color: transparent;
+    color: #1c1e21;
+}
+
+.light-theme .secondary-btn:hover {
+    background-color: #e0e3eb;
+}
+
+.light-theme .api-link {
+    color: #186ba3;
+}
+
+.light-theme #autocomplete-results {
+    background-color: #fff;
+    border: 1px solid #e0e3eb;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.light-theme #autocomplete-results div {
+    color: #1c1e21;
+    border-bottom: 1px solid #e0e3eb;
+}
+
+.light-theme #autocomplete-results div:hover {
+    background-color: #f0f3fa;
+}
+
+.light-theme #tooltip-container {
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #1c1e21;
+    border: 1px solid #e0e3eb;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .container {
     max-width: 1200px;
-    margin: 0 auto;
-    padding: var(--gap-lg);
+    margin: 20px auto;
+    /* 增加一些頂部和底部外距 */
+    padding: 30px;
 }
 
-/* 新增：頁面標頭樣式 */
 .page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--gap-lg);
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #262c3a;
+    /* 分隔線 */
 }
 
 h1 {
-    text-align: center;
-    color: var(--text-color);
+    text-align: left;
+    /* TradingView 標題通常靠左 */
+    color: #d1d4dc;
     margin-bottom: 0;
-    font-size: clamp(2rem, 5vw, 3rem);
+    font-size: 2rem;
+    font-weight: 500;
 }
 
-/* 新增：語言選擇器樣式 */
 .language-selector {
     display: flex;
     align-items: center;
-    gap: var(--gap-sm);
-    margin-left: auto; /* 將其推到最右邊 */
+    gap: 10px;
 }
+
 .language-selector label {
-    font-size: 14px;
+    font-size: 0.9rem;
+    color: #a6aeb6;
 }
+
 .language-selector select {
-    padding: 5px 8px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    background-color: var(--input-bg);
-    color: var(--input-color);
+    padding: 6px 10px;
+    border: 1px solid #262c3a;
+    border-radius: 4px;
+    background-color: #1e222d;
+    color: #d1d4dc;
     cursor: pointer;
+    font-size: 0.9rem;
 }
 
-
-/*
-  ==============================================
-  控制面板樣式
-  ==============================================
-*/
 .control-group {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: var(--gap-md);
-    margin-bottom: var(--gap-lg);
-    padding: var(--gap-md);
-    background-color: var(--control-group-bg);
-    border-radius: var(--border-radius);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    transition: background-color var(--transition-speed);
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 20px;
+    background-color: #1e222d;
+    /* 更深的控制面板背景 */
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #262c3a;
 }
 
 .input-item {
     display: flex;
     align-items: center;
-    gap: var(--gap-sm);
+    gap: 8px;
     position: relative;
 }
 
 .date-range {
     display: flex;
-    gap: var(--gap-md);
+    gap: 10px;
 }
 
 .color-picker-group {
     display: flex;
     align-items: center;
-    gap: var(--gap-sm);
+    gap: 10px;
 }
 
-.api-link {
-    color: var(--link-color);
-    text-decoration: none;
-    white-space: nowrap;
-    transition: color var(--transition-speed);
+.color-picker-group label {
+    font-size: 0.9rem;
+    color: #a6aeb6;
 }
 
-.api-link:hover {
-    text-decoration: underline;
+label {
+    font-size: 0.9rem;
+    color: #a6aeb6;
 }
 
-/*
-  ==============================================
-  輸入框、按鈕與狀態樣式
-  ==============================================
-*/
-
-input[type="text"], input[type="date"], input[type="color"] {
-    padding: 8px 15px;
-    border: 1px solid var(--border-color);
-    background-color: var(--input-bg);
-    color: var(--input-color);
+input,
+select {
+    padding: 8px 12px;
+    border: 1px solid #262c3a;
+    background-color: #181c27;
+    color: #d1d4dc;
     border-radius: 4px;
-    font-size: 14px;
-    transition: background-color var(--transition-speed), border-color var(--transition-speed);
+    font-size: 0.9rem;
+    outline: none;
 }
 
-input[type="text"]:focus, input[type="date"]:focus {
-    outline: none;
-    border-color: var(--primary-color);
+input:focus,
+select:focus {
+    border-color: #007bff;
+}
+
+input::placeholder {
+    color: #686f7a;
 }
 
 button {
     padding: 8px 15px;
-    border: 1px solid var(--border-color);
-    background-color: var(--button-bg);
-    color: var(--button-color);
+    border: 1px solid #262c3a;
+    background-color: #2a303c;
+    color: #d1d4dc;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
-    transition: background-color var(--transition-speed), color var(--transition-speed), border-color var(--transition-speed);
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease;
 }
 
 button:hover {
-    background-color: var(--button-hover-bg);
-    border-color: var(--button-hover-border);
+    background-color: #363e4d;
 }
 
 .primary-btn {
-    background-color: var(--primary-color);
+    background-color: #007bff;
     color: white;
-    border-color: var(--primary-color);
+    border-color: #007bff;
 }
+
 .primary-btn:hover {
     background-color: #0056b3;
-    border-color: #0056b3;
 }
 
 .secondary-btn {
-    background-color: var(--secondary-button-bg);
-    color: var(--button-color);
-    border-color: var(--border-color);
+    background-color: transparent;
+    color: #a6aeb6;
+    border: 1px solid #262c3a;
 }
+
 .secondary-btn:hover {
-    background-color: var(--button-hover-bg);
+    background-color: #2a303c;
+}
+
+.interval-btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid #262c3a;
+    background-color: transparent;
+    color: #a6aeb6;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .interval-btn.active {
-    background-color: var(--primary-color);
+    background-color: #007bff;
     color: white;
-    border-color: var(--primary-color);
+    border-color: #007bff;
+}
+
+.interval-btn:hover {
+    background-color: #2a303c;
+    color: #d1d4dc;
+    border-color: #363e4d;
 }
 
 .interval-btn.active:hover {
@@ -229,90 +247,94 @@ button:hover {
 }
 
 #api-key-status {
-    color: #4CAF50;
-    font-size: 14px;
+    color: #8bc34a;
+    font-size: 0.9rem;
     display: none;
     align-items: center;
-    gap: var(--gap-sm);
+    gap: 8px;
     white-space: nowrap;
-    transition: color var(--transition-speed);
-}
-.light-theme #api-key-status {
-    color: #2e7d32;
 }
 
 #edit-api-key-btn {
-    font-size: 12px;
+    font-size: 0.8rem;
     padding: 4px 8px;
-    margin-left: 0; /* 移除 flex 帶來的額外間距 */
+    margin-left: 10px;
+    background-color: transparent;
+    color: #a6aeb6;
+    border: 1px solid #262c3a;
 }
 
-/*
-  ==============================================
-  自動完成樣式
-  ==============================================
-*/
+#edit-api-key-btn:hover {
+    background-color: #2a303c;
+}
+
+.api-link {
+    color: #1e88e5;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.api-link:hover {
+    text-decoration: underline;
+}
 
 #autocomplete-results {
     position: absolute;
     top: 100%;
     left: 0;
     right: 0;
-    background-color: var(--autocomplete-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 0 0 var(--border-radius) var(--border-radius);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background-color: #181c27;
+    border: 1px solid #262c3a;
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     max-height: 200px;
     overflow-y: auto;
     z-index: 10;
     display: none;
 }
+
 #autocomplete-results div {
-    padding: 10px;
+    padding: 8px 12px;
     cursor: pointer;
-    border-bottom: 1px solid var(--border-color);
-    color: var(--text-color);
-    transition: background-color var(--transition-speed);
+    border-bottom: 1px solid #262c3a;
+    color: #d1d4dc;
 }
+
 #autocomplete-results div:last-child {
     border-bottom: none;
 }
+
 #autocomplete-results div:hover {
-    background-color: var(--autocomplete-hover-bg);
+    background-color: #2a303c;
 }
 
-
-/*
-  ==============================================
-  圖表與載入指示器樣式
-  ==============================================
-*/
 #chart-container {
     width: 100%;
     height: 600px;
-    background-color: var(--control-group-bg);
-    border-radius: var(--border-radius);
+    background-color: #1e222d;
+    border-radius: 6px;
     overflow: hidden;
     position: relative;
-    transition: background-color var(--transition-speed);
+    border: 1px solid #262c3a;
 }
+
 #chart-container.loading {
     filter: blur(2px);
-    transition: filter 0.5s ease;
+    transition: filter 0.3s ease;
 }
 
 #tooltip-container {
     position: absolute;
     z-index: 1000;
-    padding: 10px;
-    background-color: var(--tooltip-bg);
-    color: var(--tooltip-color);
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
+    padding: 8px 12px;
+    background-color: rgba(30, 34, 45, 0.9);
+    color: #d1d4dc;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 0.9rem;
     display: none;
     pointer-events: none;
-    transition: background-color var(--transition-speed), color var(--transition-speed);
+    border: 1px solid #262c3a;
 }
 
 #loading-indicator {
@@ -322,74 +344,84 @@ button:hover {
     transform: translate(-50%, -50%);
     z-index: 1000;
     display: none;
-    padding: 20px 30px;
-    background-color: rgba(0, 0, 0, 0.7);
-    border-radius: var(--border-radius);
+    padding: 15px 20px;
+    background-color: rgba(0, 0, 0, 0.8);
+    border-radius: 6px;
     color: white;
     text-align: center;
-    font-size: 16px;
-    font-weight: bold;
+    font-size: 1rem;
+    font-weight: 500;
 }
 
 .loader {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid var(--primary-color);
+    border: 3px solid #363e4d;
+    border-top: 3px solid #007bff;
     border-radius: 50%;
-    width: 30px;
-    height: 30px;
+    width: 25px;
+    height: 25px;
     animation: spin 1s linear infinite;
-    margin: 0 auto 10px;
+    margin: 0 auto 8px;
 }
+
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 #error-message {
-    color: var(--error-message-color);
-    background-color: var(--error-message-bg);
+    color: #ff6b6b;
+    background-color: rgba(255, 107, 107, 0.1);
     padding: 10px;
-    border-radius: var(--border-radius);
+    border-radius: 4px;
     text-align: center;
     margin-top: 15px;
     display: none;
+    border: 1px solid rgba(255, 107, 107, 0.3);
 }
 
-/*
-  ==============================================
-  響應式設計
-  ==============================================
-*/
+/* 響應式設計 */
 @media (max-width: 768px) {
-    .control-group {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .date-range {
-        flex-direction: column;
-    }
-    
-    .date-range .input-item {
-        width: 100%;
-    }
-    
-    .date-range .input-item input {
-        width: 100%;
-        box-sizing: border-box; /* 確保 padding 和 border 不會超出寬度 */
+    .container {
+        padding: 20px;
     }
 
     .page-header {
         flex-direction: column;
-        gap: var(--gap-sm);
-        text-align: center;
-    }
-    
-    .language-selector {
-        margin-left: 0;
+        align-items: flex-start;
+        gap: 10px;
     }
 
     h1 {
-        margin-bottom: 0;
+        text-align: left;
+        font-size: 1.75rem;
+    }
+
+    .control-group {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 15px;
+    }
+
+    .input-item,
+    .date-range {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    input,
+    select,
+    button {
+        padding: 10px;
+        font-size: 0.95rem;
+    }
+
+    .language-selector {
+        align-self: flex-end;
+        margin-left: 0;
     }
 }
