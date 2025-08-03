@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
         loadDataBtn: document.getElementById('load-data-btn'),
         intervalBtns: document.querySelectorAll('.interval-btn'),
         tooltipContainer: document.getElementById('tooltip-container'),
-        themeSelect: document.getElementById('theme-select'),
+        themeToggleBtn: document.getElementById('theme-toggle-btn'),
         startDateInput: document.getElementById('start-date'),
         endDateInput: document.getElementById('end-date'),
         loadingIndicator: document.getElementById('loading-indicator'),
@@ -28,456 +28,398 @@ document.addEventListener('DOMContentLoaded', function() {
         resetZoomBtn: document.getElementById('reset-zoom-btn'),
         upColorInput: document.getElementById('up-color'),
         downColorInput: document.getElementById('down-color'),
-        toggleVolumeBtn: document.getElementById('toggle-volume-btn'),
-        toggleMaBtn: document.getElementById('toggle-ma-btn'),
-        editApiKeyBtn: document.getElementById('edit-api-key-btn')
+        editApiKeyBtn: document.getElementById('edit-api-key-btn'),
+        langSelect: document.getElementById('lang-select'), // 新增語言選擇器
+    };
+    
+    /**
+     * 儲存所有可翻譯的字串。
+     * @type {Object}
+     */
+    const translations = {
+        'zh-Hant': {
+            title: '即時股票圖表',
+            language: '語言:',
+            apiKeyLabel: 'API 金鑰:',
+            apiKeyPlaceholder: '請輸入你的 Twelve Data API 金鑰',
+            apiKeySaved: 'API 金鑰已儲存！',
+            editButton: '編輯',
+            apiRegisterLink: '註冊 Twelve Data API 金鑰',
+            symbolLabel: '股票代號:',
+            symbolPlaceholder: '例如: AAPL, TSLA',
+            loadDataButton: '載入數據',
+            intervalLabel: '時間間隔:',
+            startDateLabel: '開始日期:',
+            endDateLabel: '結束日期:',
+            visualSettingsLabel: '視覺化設定:',
+            upColorLabel: '上漲 K 線:',
+            downColorLabel: '下跌 K 線:',
+            loadingText: '正在載入數據...',
+            zoomInButton: '放大 (+)',
+            zoomOutButton: '縮小 (-)',
+            resetZoomButton: '重設縮放 (R)',
+            toggleThemeButton: '亮色模式',
+            tooltipTime: '時間:',
+            tooltipOpen: '開盤:',
+            tooltipHigh: '最高:',
+            tooltipLow: '最低:',
+            tooltipClose: '收盤:',
+            tooltipEvent: '事件:',
+            tooltipEps: 'EPS:',
+            tooltipSplit: '股票分割:',
+            errorNoApiKey: '錯誤：請先輸入你的 API 金鑰！',
+            errorInvalidApiKey: 'API 金鑰無效或已過期。請檢查金鑰。',
+            errorNoSymbol: '錯誤：請輸入股票代號！',
+            errorApi: '載入數據時發生錯誤：',
+        },
+        'en': {
+            title: 'Real-time Stock Chart',
+            language: 'Language:',
+            apiKeyLabel: 'API Key:',
+            apiKeyPlaceholder: 'Enter your Twelve Data API Key',
+            apiKeySaved: 'API Key saved!',
+            editButton: 'Edit',
+            apiRegisterLink: 'Register for Twelve Data API Key',
+            symbolLabel: 'Symbol:',
+            symbolPlaceholder: 'e.g., AAPL, TSLA',
+            loadDataButton: 'Load Data',
+            intervalLabel: 'Interval:',
+            startDateLabel: 'Start Date:',
+            endDateLabel: 'End Date:',
+            visualSettingsLabel: 'Visualization Settings:',
+            upColorLabel: 'Up Color:',
+            downColorLabel: 'Down Color:',
+            loadingText: 'Loading data...',
+            zoomInButton: 'Zoom In (+)',
+            zoomOutButton: 'Zoom Out (-)',
+            resetZoomButton: 'Reset Zoom (R)',
+            toggleThemeButton: 'Light Mode',
+            tooltipTime: 'Time:',
+            tooltipOpen: 'Open:',
+            tooltipHigh: 'High:',
+            tooltipLow: 'Low:',
+            tooltipClose: 'Close:',
+            tooltipEvent: 'Event:',
+            tooltipEps: 'EPS:',
+            tooltipSplit: 'Stock Split:',
+            errorNoApiKey: 'Error: Please enter your API key first!',
+            errorInvalidApiKey: 'Invalid or expired API key. Please check your key.',
+            errorNoSymbol: 'Error: Please enter a stock symbol!',
+            errorApi: 'Error loading data:',
+        }
+    };
+    
+    /** @type {string} 當前選中的語言 */
+    let currentLanguage = 'zh-Hant';
+
+    // ... (其餘的變數、圖表初始化、setupPriceScales 函式等保持不變) ...
+    /** @type {string} 當前選中的時間間隔 */
+    let currentInterval = '1day';
+    /** @type {boolean} 當前是否為暗色模式 */
+    let isDarkMode = true;
+    /** @type {number} 上次載入的數據點數量 */
+    let lastLoadedDataCount = 0;
+    /** @type {Array<Object>} 事件標記數據 */
+    let markersData = [];
+    /** @type {Array<Object>} 原始成交量數據，用於顏色更新 */
+    let originalVolumeData = [];
+
+    const chartInstance = LightweightCharts.createChart(DOMElements.chartContainer, {
+        width: DOMElements.chartContainer.offsetWidth,
+        height: DOMElements.chartContainer.offsetHeight,
+        layout: {
+            background: { type: 'solid', color: getComputedStyle(document.body).getPropertyValue('--control-group-bg') },
+            textColor: getComputedStyle(document.body).getPropertyValue('--text-color'),
+        },
+        grid: {
+            vertLines: { color: getComputedStyle(document.body).getPropertyValue('--chart-grid-color') },
+            horzLines: { color: getComputedStyle(document.body).getPropertyValue('--chart-grid-color') },
+        },
+    });
+
+    const series = {
+        candle: chartInstance.addCandlestickSeries({
+            upColor: DOMElements.upColorInput.value,
+            downColor: DOMElements.downColorInput.value,
+            borderDownColor: DOMElements.downColorInput.value,
+            borderUpColor: DOMElements.upColorInput.value,
+            wickDownColor: DOMElements.downColorInput.value,
+            wickUpColor: DOMElements.upColorInput.value,
+            priceScaleId: 'price-scale',
+        }),
+        volume: chartInstance.addHistogramSeries({
+            priceFormat: {
+                type: 'volume',
+            },
+            priceScaleId: 'volume-scale',
+            overlay: true,
+            visible: true,
+        }),
     };
 
-    // 狀態變數
-    let currentInterval = '1day';
-    let currentTheme = 'tradingview-theme';
-    let lastLoadedDataCount = 0;
-    let isVolumeVisible = false;
-    let isMaVisible = false;
+    function setupPriceScales() {
+        chartInstance.priceScale('price-scale').applyOptions({
+            scaleMargins: {
+                top: 0.1,
+                bottom: 0.2,
+            },
+        });
+        chartInstance.priceScale('volume-scale').applyOptions({
+            scaleMargins: {
+                top: 0.8,
+                bottom: 0,
+            },
+            visible: false,
+            borderVisible: false,
+        });
+    }
 
-    // 圖表系列
-    let chart, candleSeries, volumeSeries, maSeries;
 
-    // 定義不同主題的顏色配置
-    const THEME_CONFIGS = {
-        'tradingview-theme': {
-            layout: { background: { type: 'solid', color: '#0b0e14' }, textColor: '#d1d4dc' },
-            grid: { vertLines: { color: 'rgba(60, 60, 60, 0.5)' }, horzLines: { color: 'rgba(60, 60, 60, 0.5)' } },
-            crosshair: { mode: 0 }, // 0 = Normal, 1 = Magnet
-            priceScale: { borderVisible: false },
-            timeScale: { borderVisible: false, timeVisible: true, secondsVisible: true }
+    // --- 輔助函式 - 語言切換 ---
+
+    /**
+     * 根據當前語言更新頁面上所有帶有 data-i18n 屬性的文字。
+     */
+    function setLanguage() {
+        document.querySelectorAll('[data-i18n]').forEach(element => {
+            const key = element.getAttribute('data-i18n');
+            if (translations[currentLanguage][key]) {
+                element.textContent = translations[currentLanguage][key];
+            }
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+            const key = element.getAttribute('data-i18n-placeholder');
+            if (translations[currentLanguage][key]) {
+                element.placeholder = translations[currentLanguage][key];
+            }
+        });
+        // 額外處理 theme toggle 按鈕的文字
+        DOMElements.themeToggleBtn.textContent = translations[currentLanguage][isDarkMode ? 'toggleThemeButton' : 'toggleThemeButton'].replace('亮色模式', '暗色模式').replace('Light Mode', 'Dark Mode');
+    }
+
+    // --- API 服務模組 (無變動) ---
+
+    const apiService = {
+        fetchTimeSeries: async (symbol, interval, startDate, endDate, apiKey) => {
+            let apiUrl;
+            if (startDate && endDate) {
+                apiUrl = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=${interval}&start_date=${startDate}&end_date=${endDate}&apikey=${apiKey}`;
+            } else {
+                const outputsize = 5 * 365;
+                apiUrl = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=${interval}&outputsize=${outputsize}&apikey=${apiKey}`;
+            }
+            const response = await fetch(apiUrl);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`API 錯誤：${errorData.message || '無法取得 K 線數據。'}`);
+            }
+            const data = await response.json();
+            if (data.status === 'error') {
+                 if (data.code === 401 || data.code === 402) {
+                    throw new Error(translations[currentLanguage].errorInvalidApiKey);
+                 }
+                 throw new Error(`${translations[currentLanguage].errorApi}${data.message}`);
+            }
+            return data;
         },
-        'light-theme': {
-            layout: { background: { type: 'solid', color: '#f0f3fa' }, textColor: '#1c1e21' },
-            grid: { vertLines: { color: 'rgba(215, 215, 215, 0.5)' }, horzLines: { color: 'rgba(215, 215, 215, 0.5)' } },
-            crosshair: { mode: 0 },
-            priceScale: { borderVisible: false },
-            timeScale: { borderVisible: false, timeVisible: true, secondsVisible: true }
+        
+        fetchEvents: async (symbol, startDate, endDate, apiKey) => {
+            const [earningsResponse, splitsResponse] = await Promise.all([
+                fetch(`https://api.twelvedata.com/earnings_calendar?symbol=${symbol}&start_date=${startDate || ''}&end_date=${endDate || ''}&apikey=${apiKey}`),
+                fetch(`https://api.twelvedata.com/splits_calendar?symbol=${symbol}&start_date=${startDate || ''}&end_date=${endDate || ''}&apikey=${apiKey}`)
+            ]);
+            
+            const [earningsData, splitsData] = await Promise.all([
+                earningsResponse.json(),
+                splitsResponse.json()
+            ]);
+            
+            return { earningsData, splitsData };
         },
-        'modern-dark-theme': {
-            layout: { background: { type: 'solid', color: '#121212' }, textColor: '#e0e0e0' },
-            grid: { vertLines: { color: 'rgba(70, 70, 70, 0.5)' }, horzLines: { color: 'rgba(70, 70, 70, 0.5)' } },
-            crosshair: { mode: 0 },
-            priceScale: { borderVisible: false },
-            timeScale: { borderVisible: false, timeVisible: true, secondsVisible: true }
+
+        fetchAutocomplete: async (query, apiKey) => {
+            const apiUrl = `https://api.twelvedata.com/symbol_search?symbol=${query}&outputsize=10&apikey=${apiKey}`;
+            const response = await fetch(apiUrl);
+            if (!response.ok) {
+                throw new Error('無法取得建議清單。');
+            }
+            return await response.json();
         }
     };
 
-    /**
-     * UI 處理相關邏輯
-     */
+    // --- UI 處理模組 ---
+
     const uiHandler = {
-        /** 應用主題 */
-        applyTheme: (themeName) => {
-            const theme = THEME_CONFIGS[themeName];
-            if (!theme) return;
-
-            document.body.className = '';
-            document.body.classList.add(themeName);
+        applyTheme: (isDark) => {
+            document.body.classList.toggle('light-theme', !isDark);
             
-            // 更新圖表主題
-            if (chart) {
-                chart.applyOptions(theme);
-                // 由於 volume series 的顏色獨立於主題，我們在切換主題時需要手動重設
-                if (isVolumeVisible) {
-                    uiHandler.updateVolumeSeriesColors(themeName);
-                }
-            }
-
-            // 更新 localStorage
-            localStorage.setItem('chartTheme', themeName);
+            chartInstance.applyOptions({
+                layout: {
+                    background: { type: 'solid', color: getComputedStyle(document.body).getPropertyValue('--control-group-bg') },
+                    textColor: getComputedStyle(document.body).getPropertyValue('--text-color'),
+                },
+                grid: {
+                    vertLines: { color: getComputedStyle(document.body).getPropertyValue('--chart-grid-color') },
+                    horzLines: { color: getComputedStyle(document.body).getPropertyValue('--chart-grid-color') },
+                },
+            });
+            
+            DOMElements.themeToggleBtn.textContent = translations[currentLanguage][isDark ? 'toggleThemeButton' : 'toggleThemeButton'].replace('亮色模式', '暗色模式').replace('Light Mode', 'Dark Mode');
         },
 
-        /** 更新 K 線顏色 */
         updateChartColors: () => {
-            if (candleSeries) {
-                const upColor = DOMElements.upColorInput.value;
-                const downColor = DOMElements.downColorInput.value;
-                candleSeries.applyOptions({
-                    upColor: upColor,
-                    downColor: downColor,
-                    borderUpColor: upColor,
-                    borderDownColor: downColor,
-                    wickUpColor: upColor,
-                    wickDownColor: downColor,
-                });
-                localStorage.setItem('upColor', upColor);
-                localStorage.setItem('downColor', downColor);
+            const upColor = DOMElements.upColorInput.value;
+            const downColor = DOMElements.downColorInput.value;
+            series.candle.applyOptions({
+                upColor: upColor,
+                downColor: downColor,
+                borderDownColor: downColor,
+                borderUpColor: upColor,
+                wickDownColor: downColor,
+                wickUpColor: upColor,
+            });
+            if (originalVolumeData.length > 0) {
+                const formattedVolumeData = originalVolumeData.map(item => ({
+                    time: item.time,
+                    value: item.value,
+                    color: item.open > item.close ? downColor : upColor
+                }));
+                series.volume.setData(formattedVolumeData);
             }
+            localStorage.setItem('upColor', upColor);
+            localStorage.setItem('downColor', downColor);
         },
 
-        /** 更新成交量顏色 */
-        updateVolumeSeriesColors: (themeName) => {
-            if (volumeSeries) {
-                let upColor, downColor;
-                if (themeName === 'light-theme') {
-                    upColor = 'rgba(38, 166, 154, 0.4)';
-                    downColor = 'rgba(239, 83, 80, 0.4)';
-                } else {
-                    upColor = 'rgba(38, 166, 154, 0.4)';
-                    downColor = 'rgba(239, 83, 80, 0.4)';
-                }
-                volumeSeries.applyOptions({
-                    upColor: upColor,
-                    downColor: downColor
-                });
-            }
-        },
-
-        /** 顯示載入指示器 */
-        showLoading: () => {
-            DOMElements.loadingIndicator.style.display = 'flex';
-            DOMElements.chartContainer.classList.add('loading');
-        },
-
-        /** 隱藏載入指示器 */
-        hideLoading: () => {
-            DOMElements.loadingIndicator.style.display = 'none';
-            DOMElements.chartContainer.classList.remove('loading');
-        },
-        
-        /** 顯示錯誤訊息 */
         showError: (message) => {
             DOMElements.errorMessageContainer.textContent = message;
             DOMElements.errorMessageContainer.style.display = 'block';
         },
 
-        /** 隱藏錯誤訊息 */
         hideError: () => {
             DOMElements.errorMessageContainer.style.display = 'none';
+        },
+
+        showLoading: () => {
+            DOMElements.chartContainer.classList.add('loading');
+            DOMElements.loadingIndicator.style.display = 'block';
+            DOMElements.loadingIndicator.innerHTML = `<div class="loader"></div><span>${translations[currentLanguage].loadingText}</span>`;
+        },
+
+        hideLoading: () => {
+            DOMElements.chartContainer.classList.remove('loading');
+            DOMElements.loadingIndicator.style.display = 'none';
+        },
+
+        displayAutocompleteResults: (results) => {
+            const { autocompleteResults, symbolInput, loadDataBtn } = DOMElements;
+            autocompleteResults.innerHTML = '';
+            if (results && results.data && results.data.length > 0) {
+                results.data.forEach(item => {
+                    const resultItem = document.createElement('div');
+                    resultItem.textContent = `${item.symbol} - ${item.instrument_name}`;
+                    resultItem.dataset.symbol = item.symbol;
+                    resultItem.addEventListener('click', () => {
+                        symbolInput.value = item.symbol;
+                        autocompleteResults.style.display = 'none';
+                        loadDataBtn.click();
+                    });
+                    autocompleteResults.appendChild(resultItem);
+                });
+                autocompleteResults.style.display = 'block';
+            } else {
+                autocompleteResults.style.display = 'none';
+            }
+        },
+
+        toggleApiKeyInputState: (hasApiKey) => {
+            DOMElements.apiKeyInput.style.display = hasApiKey ? 'none' : 'inline';
+            DOMElements.apiKeyStatus.style.display = hasApiKey ? 'inline-flex' : 'none';
+            if (!hasApiKey) {
+                DOMElements.apiKeyInput.focus();
+            }
         }
     };
 
-    /**
-     * API 處理相關邏輯
-     */
-    const apiHandler = {
-        BASE_URL: 'https://api.twelvedata.com',
-        API_KEY: '',
+    // --- 主程式邏輯 ---
 
-        fetchData: async (symbol, interval, startDate, endDate) => {
-            const url = `${apiHandler.BASE_URL}/time_series?symbol=${symbol}&interval=${interval}&apikey=${apiHandler.API_KEY}&outputsize=5000&start_date=${startDate}&end_date=${endDate}`;
-            const response = await fetch(url);
-            const data = await response.json();
-            return data;
-        },
+    async function loadAllData(symbol, interval, startDate, endDate, apiKey) {
+        uiHandler.hideError();
+        uiHandler.hideLoading();
+        DOMElements.autocompleteResults.style.display = 'none';
 
-        fetchAutocomplete: async (query) => {
-            const url = `${apiHandler.BASE_URL}/symbol_search?symbol=${query}&apikey=${apiHandler.API_KEY}`;
-            const response = await fetch(url);
-            const data = await response.json();
-            return data;
-        },
-
-        // 其他 API 函數...
-    };
-
-    /**
-     * 圖表設定相關邏輯
-     */
-    const chartHandler = {
-        initialize: () => {
-            chart = LightweightCharts.createChart(DOMElements.chartContainer, {
-                width: DOMElements.chartContainer.offsetWidth,
-                height: DOMElements.chartContainer.offsetHeight,
-                ...THEME_CONFIGS[currentTheme]
-            });
-            
-            candleSeries = chart.addCandlestickSeries({
-                upColor: DOMElements.upColorInput.value,
-                downColor: DOMEElements.downColorInput.value,
-                borderUpColor: DOMElements.upColorInput.value,
-                borderDownColor: DOMElements.downColorInput.value,
-                wickUpColor: DOMElements.upColorInput.value,
-                wickDownColor: DOMElements.downColorInput.value,
-            });
-
-            volumeSeries = chart.addHistogramSeries({
-                priceScaleId: '', // 綁定到左側價格軸
-                overlay: true, // 疊加在主圖上
-                lastValueVisible: false,
-                priceLineVisible: false,
-                pane: 1, // 將其放在第二個窗格中
-            });
-            volumeSeries.applyOptions({
-                priceFormat: {
-                    type: 'volume',
-                },
-                upColor: 'rgba(38, 166, 154, 0.4)',
-                downColor: 'rgba(239, 83, 80, 0.4)',
-            });
-            volumeSeries.setData([]); // 預設為空，隱藏
-            chart.priceScale('left').applyOptions({
-                visible: false,
-            });
-
-            maSeries = chart.addLineSeries({
-                color: '#ffc107',
-                lineWidth: 2,
-            });
-            maSeries.setData([]);
-        },
-
-        updateData: (data) => {
-            candleSeries.setData(data.map(item => ({
-                time: item.datetime,
-                open: parseFloat(item.open),
-                high: parseFloat(item.high),
-                low: parseFloat(item.low),
-                close: parseFloat(item.close)
-            })));
-            lastLoadedDataCount = data.length;
-        },
-        
-        updateVolumeData: (data) => {
-            const volumeData = data.map(item => ({
-                time: item.datetime,
-                value: parseFloat(item.volume),
-                color: parseFloat(item.close) >= parseFloat(item.open) ? 'rgba(38, 166, 154, 0.4)' : 'rgba(239, 83, 80, 0.4)'
-            }));
-            volumeSeries.setData(volumeData);
-            if(isVolumeVisible) {
-                chart.priceScale('left').applyOptions({ visible: true });
-            }
-        },
-
-        updateMaData: (data) => {
-            const maData = calculateMA(data, 20); // 計算 20 期移動平均線
-            maSeries.setData(maData);
-        },
-
-        resizeChart: () => {
-            if (chart) {
-                chart.applyOptions({
-                    width: DOMElements.chartContainer.offsetWidth,
-                    height: DOMElements.chartContainer.offsetHeight
-                });
-            }
-        },
-    };
-
-    /**
-     * 輔助函數
-     */
-    const helpers = {
-        formatDate: (dateString) => {
-            const date = new Date(dateString);
-            const year = date.getFullYear();
-            const month = (date.getMonth() + 1).toString().padStart(2, '0');
-            const day = date.getDate().toString().padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        },
-        calculateMA: (data, period) => {
-            const maData = [];
-            for (let i = period - 1; i < data.length; i++) {
-                const sum = data.slice(i - period + 1, i + 1).reduce((acc, curr) => acc + parseFloat(curr.close), 0);
-                maData.push({
-                    time: data[i].datetime,
-                    value: sum / period
-                });
-            }
-            return maData;
-        }
-    };
-    
-    // --- 主要邏輯與事件監聽器 ---
-
-    const loadAllData = async (symbol, interval, startDate, endDate) => {
-        if (!apiHandler.API_KEY) {
-            uiHandler.showError('請先輸入並儲存你的 Twelve Data API 金鑰！');
+        if (!apiKey || apiKey.trim() === '') {
+            uiHandler.showError(translations[currentLanguage].errorNoApiKey);
+            uiHandler.toggleApiKeyInputState(false);
             return;
         }
-        
-        uiHandler.hideError();
+        if (!symbol || symbol.trim() === '') {
+            uiHandler.showError(translations[currentLanguage].errorNoSymbol);
+            return;
+        }
+
         uiHandler.showLoading();
-        
+
         try {
-            const data = await apiHandler.fetchData(symbol, interval, startDate, endDate);
-            
-            if (data && data.status === 'ok' && data.values.length > 0) {
-                chartHandler.updateData(data.values);
-                chartHandler.updateVolumeData(data.values);
-                chartHandler.updateMaData(data.values);
-                localStorage.setItem('lastSymbol', symbol);
-            } else {
-                uiHandler.showError(`載入數據失敗：${data.message || '找不到數據'}`);
-                // 清除舊數據
-                candleSeries.setData([]);
-                volumeSeries.setData([]);
-                maSeries.setData([]);
+            const timeSeriesData = await apiService.fetchTimeSeries(symbol, interval, startDate, endDate, apiKey);
+            const { earningsData, splitsData } = await apiService.fetchEvents(symbol, startDate, endDate, apiKey);
+
+            const formattedCandleData = timeSeriesData.values
+                .map(item => ({
+                    time: item.datetime,
+                    open: parseFloat(item.open),
+                    high: parseFloat(item.high),
+                    low: parseFloat(item.low),
+                    close: parseFloat(item.close),
+                }))
+                .filter(item => item.open !== null && item.high !== null && item.low !== null && item.close !== null)
+                .reverse();
+
+            originalVolumeData = timeSeriesData.values
+                .map(item => ({
+                    time: item.datetime,
+                    value: parseFloat(item.volume),
+                    open: parseFloat(item.open),
+                    close: parseFloat(item.close)
+                }))
+                .filter(item => item.value !== null)
+                .reverse();
+            const upColor = DOMElements.upColorInput.value;
+            const downColor = DOMElements.downColorInput.value;
+            const formattedVolumeData = originalVolumeData.map(item => ({
+                time: item.time,
+                value: item.value,
+                color: item.open > item.close ? downColor : upColor
+            }));
+
+            series.candle.setData(formattedCandleData);
+            lastLoadedDataCount = formattedCandleData.length;
+            series.volume.setData(formattedVolumeData);
+
+            const markers = [];
+            if (earningsData.status !== 'error' && earningsData.earnings_calendar) {
+                earningsData.earnings_calendar.forEach(earning => markers.push({ time: earning.datetime.substring(0, 10), position: 'inBar', color: '#2962FF', shape: 'circle', text: `${translations[currentLanguage].tooltipEps} ${earning.eps_estimate || 'N/A'}` }));
             }
+            if (splitsData.status !== 'error' && splitsData.splits_calendar) {
+                splitsData.splits_calendar.forEach(split => markers.push({ time: split.datetime.substring(0, 10), position: 'inBar', color: '#FF6D00', shape: 'arrowUp', text: `${translations[currentLanguage].tooltipSplit} ${split.new_shares} for ${split.old_shares}` }));
+            }
+            markersData = markers;
+            series.candle.setMarkers(markersData);
+            
+            localStorage.setItem('twelveDataApiKey', apiKey);
+            localStorage.setItem('lastSymbol', symbol);
+            
+            uiHandler.toggleApiKeyInputState(true);
+
         } catch (error) {
-            console.error('API 呼叫失敗:', error);
-            uiHandler.showError('無法從 API 獲取數據，請檢查連線或 API 金鑰。');
+            console.error('載入數據時發生錯誤:', error);
+            uiHandler.showError(`${translations[currentLanguage].errorApi} ${error.message}`);
+            uiHandler.toggleApiKeyInputState(false);
         } finally {
             uiHandler.hideLoading();
         }
-    };
-
-    const setupEventListeners = () => {
-        // ... (其他事件監聽器與舊版相同) ...
-
-        // 主題選擇器事件監聽器
-        DOMElements.themeSelect.addEventListener('change', (e) => {
-            const selectedTheme = e.target.value;
-            uiHandler.applyTheme(selectedTheme);
-        });
-
-        // 按鈕點擊事件
-        DOMElements.loadDataBtn.addEventListener('click', () => {
-            const symbol = DOMElements.symbolInput.value.toUpperCase();
-            if (symbol) {
-                const startDate = DOMElements.startDateInput.value;
-                const endDate = DOMElements.endDateInput.value;
-                loadAllData(symbol, currentInterval, startDate, endDate);
-            }
-        });
-        
-        // 時間間隔按鈕
-        DOMElements.intervalBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                DOMElements.intervalBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentInterval = btn.dataset.interval;
-                localStorage.setItem('chartInterval', currentInterval);
-                const symbol = DOMElements.symbolInput.value.toUpperCase();
-                if (symbol) {
-                    const startDate = DOMElements.startDateInput.value;
-                    const endDate = DOMElements.endDateInput.value;
-                    loadAllData(symbol, currentInterval, startDate, endDate);
-                }
-            });
-        });
-
-        // 視覺化顏色選擇器
-        DOMElements.upColorInput.addEventListener('change', uiHandler.updateChartColors);
-        DOMElements.downColorInput.addEventListener('change', uiHandler.updateChartColors);
-
-        // 放大縮小按鈕
-        DOMElements.zoomInBtn.addEventListener('click', () => {
-            const from = lastLoadedDataCount - 50 > 0 ? lastLoadedDataCount - 50 : 0;
-            const to = lastLoadedDataCount;
-            if (from < to) {
-                chart.timeScale().setVisibleLogicalRange({ from, to });
-            }
-        });
-        DOMElements.zoomOutBtn.addEventListener('click', () => {
-            const from = 0;
-            const to = lastLoadedDataCount;
-            chart.timeScale().setVisibleLogicalRange({ from, to });
-        });
-        DOMElements.resetZoomBtn.addEventListener('click', () => {
-            chart.timeScale().fitContent();
-        });
-
-        // 切換成交量
-        DOMElements.toggleVolumeBtn.addEventListener('click', () => {
-            isVolumeVisible = !isVolumeVisible;
-            if (isVolumeVisible) {
-                DOMElements.toggleVolumeBtn.classList.add('active');
-                volumeSeries.setData(
-                    // 重新整理數據，確保 volumeSeries 的顏色正確
-                    candleSeries.data().map((d, i) => ({
-                        time: d.time,
-                        value: d.originalData.volume,
-                        color: d.close >= d.open ? 'rgba(38, 166, 154, 0.4)' : 'rgba(239, 83, 80, 0.4)'
-                    }))
-                );
-                chart.priceScale('left').applyOptions({ visible: true });
-            } else {
-                DOMElements.toggleVolumeBtn.classList.remove('active');
-                volumeSeries.setData([]);
-                chart.priceScale('left').applyOptions({ visible: false });
-            }
-        });
-        
-        // 切換 MA
-        DOMElements.toggleMaBtn.addEventListener('click', () => {
-            isMaVisible = !isMaVisible;
-            if (isMaVisible) {
-                DOMElements.toggleMaBtn.classList.add('active');
-                const maData = helpers.calculateMA(candleSeries.data().map(d => ({
-                    datetime: d.time,
-                    close: d.close
-                })), 20);
-                maSeries.setData(maData);
-            } else {
-                DOMElements.toggleMaBtn.classList.remove('active');
-                maSeries.setData([]);
-            }
-        });
-
-        // API 金鑰輸入
-        DOMElements.apiKeyInput.addEventListener('input', () => {
-            apiHandler.API_KEY = DOMElements.apiKeyInput.value.trim();
-            localStorage.setItem('twelveDataApiKey', apiHandler.API_KEY);
-            if (apiHandler.API_KEY) {
-                DOMElements.apiKeyInput.style.display = 'none';
-                DOMElements.apiKeyStatus.style.display = 'flex';
-            }
-        });
-
-        DOMElements.editApiKeyBtn.addEventListener('click', () => {
-            DOMElements.apiKeyInput.style.display = 'inline-block';
-            DOMElements.apiKeyStatus.style.display = 'none';
-            DOMElements.apiKeyInput.focus();
-        });
-
-        // 自動完成功能
-        DOMElements.symbolInput.addEventListener('input', debounce(async () => {
-            const query = DOMElements.symbolInput.value.trim();
-            if (query.length > 1 && apiHandler.API_KEY) {
-                try {
-                    const data = await apiHandler.fetchAutocomplete(query);
-                    if (data && data.status === 'ok' && data.data && data.data.length > 0) {
-                        DOMElements.autocompleteResults.innerHTML = '';
-                        data.data.forEach(item => {
-                            const div = document.createElement('div');
-                            div.textContent = `${item.symbol} - ${item.instrument_name}`;
-                            div.addEventListener('click', () => {
-                                DOMElements.symbolInput.value = item.symbol;
-                                DOMElements.autocompleteResults.style.display = 'none';
-                            });
-                            DOMElements.autocompleteResults.appendChild(div);
-                        });
-                        DOMElements.autocompleteResults.style.display = 'block';
-                    } else {
-                        DOMElements.autocompleteResults.style.display = 'none';
-                    }
-                } catch (error) {
-                    console.error('Autocomplete API 呼叫失敗:', error);
-                }
-            } else {
-                DOMElements.autocompleteResults.style.display = 'none';
-            }
-        }, 300));
-        
-        // 點擊頁面其他地方隱藏自動完成
-        document.addEventListener('click', (e) => {
-            if (!DOMElements.autocompleteResults.contains(e.target) && e.target !== DOMElements.symbolInput) {
-                DOMElements.autocompleteResults.style.display = 'none';
-            }
-        });
-        
-        // 調整視窗大小
-        window.addEventListener('resize', chartHandler.resizeChart);
-
-        // 鍵盤快捷鍵
-        document.addEventListener('keydown', (e) => {
-            if (e.key === '+') {
-                DOMElements.zoomInBtn.click();
-            } else if (e.key === '-') {
-                DOMElements.zoomOutBtn.click();
-            } else if (e.key.toLowerCase() === 'r') {
-                DOMElements.resetZoomBtn.click();
-            }
-        });
-    };
+    }
+    
+    // --- 助手函式 ---
 
     function debounce(func, delay) {
         let timeout;
@@ -488,64 +430,227 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
     
-    // --- 頁面啟動 ---
-    const savedApiKey = localStorage.getItem('twelveDataApiKey');
-    if (savedApiKey) {
-        apiHandler.API_KEY = savedApiKey;
-        DOMElements.apiKeyInput.value = savedApiKey;
-        DOMElements.apiKeyInput.style.display = 'none';
-        DOMElements.apiKeyStatus.style.display = 'flex';
-    } else {
-        DOMElements.apiKeyStatus.style.display = 'none';
-    }
+    const fetchAutocompleteDebounced = debounce(async (query) => {
+        const apiKey = DOMElements.apiKeyInput.value.trim();
+        if (query.length < 2 || !apiKey) {
+            DOMElements.autocompleteResults.style.display = 'none';
+            return;
+        }
+        try {
+            const data = await apiService.fetchAutocomplete(query, apiKey);
+            uiHandler.displayAutocompleteResults(data);
+        } catch (error) {
+            console.error('自動完成 API 錯誤:', error);
+            DOMElements.autocompleteResults.style.display = 'none';
+        }
+    }, 300);
 
-    const savedSymbol = localStorage.getItem('lastSymbol');
-    if (savedSymbol) {
-        DOMElements.symbolInput.value = savedSymbol;
-    }
-    
-    const savedTheme = localStorage.getItem('chartTheme');
-    if (savedTheme) {
-        currentTheme = savedTheme;
-        DOMElements.themeSelect.value = savedTheme;
-        uiHandler.applyTheme(currentTheme);
-    } else {
-        uiHandler.applyTheme(currentTheme); // 首次載入時設定預設主題
-    }
+    // --- 事件監聽器設定 ---
 
-    const savedInterval = localStorage.getItem('chartInterval');
-    if (savedInterval) {
-        currentInterval = savedInterval;
-        DOMElements.intervalBtns.forEach(btn => {
-            if (btn.dataset.interval === currentInterval) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
+    function setupEventListeners() {
+        window.addEventListener('resize', () => {
+            chartInstance.applyOptions({
+                width: DOMElements.chartContainer.offsetWidth,
+                height: DOMElements.chartContainer.offsetHeight,
+            });
+        });
+
+        DOMElements.symbolInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                DOMElements.loadDataBtn.click();
             }
         });
-    } else {
-        document.querySelector('.interval-btn[data-interval="1day"]').classList.add('active');
-    }
-    
-    const savedUpColor = localStorage.getItem('upColor');
-    const savedDownColor = localStorage.getItem('downColor');
-    if (savedUpColor && savedDownColor) {
-        DOMElements.upColorInput.value = savedUpColor;
-        DOMElements.downColorInput.value = savedDownColor;
-    }
-    
-    // 初始化圖表與事件
-    chartHandler.initialize();
-    setupEventListeners();
 
-    // 如果有儲存的 API 金鑰和股票代號，則自動載入數據
-    if (savedApiKey && savedSymbol) {
-        // 設定預設日期範圍為今年
-        const today = new Date();
-        DOMElements.endDateInput.value = helpers.formatDate(today);
-        const startOfThisYear = new Date(today.getFullYear(), 0, 1);
-        DOMElements.startDateInput.value = helpers.formatDate(startOfThisYear);
+        DOMElements.symbolInput.addEventListener('input', (e) => {
+            fetchAutocompleteDebounced(e.target.value.trim());
+        });
 
-        loadAllData(savedSymbol, currentInterval, DOMElements.startDateInput.value, DOMElements.endDateInput.value);
+        document.addEventListener('click', (e) => {
+            if (!DOMElements.symbolInput.contains(e.target) && !DOMElements.autocompleteResults.contains(e.target)) {
+                DOMElements.autocompleteResults.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (document.activeElement === DOMElements.symbolInput || document.activeElement === DOMElements.apiKeyInput) {
+                return;
+            }
+            if (e.key === '+' || e.key === '=') { e.preventDefault(); DOMElements.zoomInBtn.click(); }
+            else if (e.key === '-') { e.preventDefault(); DOMElements.zoomOutBtn.click(); }
+            else if (e.key === 'r' || e.key === 'R') { e.preventDefault(); DOMElements.resetZoomBtn.click(); }
+        });
+
+        DOMElements.loadDataBtn.addEventListener('click', () => {
+            const symbol = DOMElements.symbolInput.value.trim();
+            const startDate = DOMElements.startDateInput.value;
+            const endDate = DOMElements.endDateInput.value;
+            const apiKey = DOMElements.apiKeyInput.value.trim();
+            loadAllData(symbol, currentInterval, startDate, endDate, apiKey);
+        });
+
+        DOMElements.intervalBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                DOMElements.intervalBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentInterval = btn.dataset.interval;
+                localStorage.setItem('chartInterval', currentInterval);
+                DOMElements.startDateInput.value = '';
+                DOMElements.endDateInput.value = '';
+                const apiKey = DOMElements.apiKeyInput.value.trim();
+                loadAllData(DOMElements.symbolInput.value.trim(), currentInterval, '', '', apiKey);
+            });
+        });
+
+        DOMElements.zoomInBtn.addEventListener('click', () => {
+            const timeScale = chartInstance.timeScale();
+            const visibleRange = timeScale.getVisibleRange();
+            if (visibleRange) {
+                const fromTimestamp = new Date(visibleRange.from).getTime();
+                const toTimestamp = new Date(visibleRange.to).getTime();
+                const newFrom = fromTimestamp + (toTimestamp - fromTimestamp) * 0.1;
+                const newTo = toTimestamp - (toTimestamp - fromTimestamp) * 0.1;
+                timeScale.setVisibleRange({ from: new Date(newFrom).toISOString().substring(0, 10), to: new Date(newTo).toISOString().substring(0, 10) });
+            }
+        });
+
+        DOMElements.zoomOutBtn.addEventListener('click', () => {
+            const timeScale = chartInstance.timeScale();
+            const visibleRange = timeScale.getVisibleRange();
+            if (visibleRange) {
+                const fromTimestamp = new Date(visibleRange.from).getTime();
+                const toTimestamp = new Date(visibleRange.to).getTime();
+                const newFrom = fromTimestamp - (toTimestamp - fromTimestamp) * 0.1;
+                const newTo = toTimestamp + (toTimestamp - fromTimestamp) * 0.1;
+                timeScale.setVisibleRange({ from: new Date(newFrom).toISOString().substring(0, 10), to: new Date(newTo).toISOString().substring(0, 10) });
+            }
+        });
+
+        DOMElements.resetZoomBtn.addEventListener('click', () => {
+            const defaultVisibleBars = 90;
+            if (lastLoadedDataCount > 0) {
+                const logicalRange = {
+                    from: Math.max(0, lastLoadedDataCount - defaultVisibleBars),
+                    to: lastLoadedDataCount,
+                };
+                chartInstance.timeScale().setVisibleLogicalRange(logicalRange);
+            } else {
+                chartInstance.timeScale().fitContent();
+            }
+        });
+
+        chartInstance.subscribeCrosshairMove((param) => {
+            const { point, time, seriesData } = param;
+            if (!point || !time || !seriesData) {
+                DOMElements.tooltipContainer.style.display = 'none';
+                return;
+            }
+            const candleData = seriesData.get(series.candle);
+            const marker = markersData.find(m => m.time === time);
+
+            if (marker) {
+                DOMElements.tooltipContainer.innerHTML = `<b>${translations[currentLanguage].tooltipTime}</b> ${marker.time}<br><b>${translations[currentLanguage].tooltipEvent}</b> ${marker.text}`;
+            } else if (candleData) {
+                DOMElements.tooltipContainer.innerHTML = `<b>${translations[currentLanguage].tooltipTime}</b> ${candleData.time}<br><b>${translations[currentLanguage].tooltipOpen}</b> ${candleData.open.toFixed(2)}<br><b>${translations[currentLanguage].tooltipHigh}</b> ${candleData.high.toFixed(2)}<br><b>${translations[currentLanguage].tooltipLow}</b> ${candleData.low.toFixed(2)}<br><b>${translations[currentLanguage].tooltipClose}</b> ${candleData.close.toFixed(2)}`;
+            } else {
+                DOMElements.tooltipContainer.style.display = 'none';
+                return;
+            }
+
+            DOMElements.tooltipContainer.style.display = 'block';
+            const x = point.x;
+            DOMElements.tooltipContainer.style.left = `${x + 15}px`;
+            if (x + DOMElements.tooltipContainer.offsetWidth + 15 > DOMElements.chartContainer.offsetWidth) {
+                DOMElements.tooltipContainer.style.left = `${x - DOMElements.tooltipContainer.offsetWidth - 15}px`;
+            }
+        });
+
+        DOMElements.themeToggleBtn.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            localStorage.setItem('isDarkMode', isDarkMode);
+            uiHandler.applyTheme(isDarkMode);
+        });
+
+        DOMElements.upColorInput.addEventListener('input', uiHandler.updateChartColors);
+        DOMElements.downColorInput.addEventListener('input', uiHandler.updateChartColors);
+        
+        DOMElements.editApiKeyBtn.addEventListener('click', () => {
+            uiHandler.toggleApiKeyInputState(false);
+            DOMElements.apiKeyInput.value = '';
+            localStorage.removeItem('twelveDataApiKey');
+        });
+
+        // 新增：語言選擇器的事件監聽器
+        DOMElements.langSelect.addEventListener('change', (e) => {
+            currentLanguage = e.target.value;
+            localStorage.setItem('language', currentLanguage);
+            setLanguage();
+            // 由於 themeToggleBtn 的文字需要特別處理，所以這裡需要更新
+            uiHandler.applyTheme(isDarkMode); 
+        });
     }
+
+    // --- 啟動函式 ---
+
+    function initApp() {
+        // 從 localStorage 載入語言設定，否則使用預設
+        const savedLanguage = localStorage.getItem('language');
+        if (savedLanguage && translations[savedLanguage]) {
+            currentLanguage = savedLanguage;
+            DOMElements.langSelect.value = savedLanguage;
+        }
+        setLanguage(); // 在啟動時設定一次語言
+
+        const savedApiKey = localStorage.getItem('twelveDataApiKey');
+        if (savedApiKey) {
+            DOMElements.apiKeyInput.value = savedApiKey;
+            uiHandler.toggleApiKeyInputState(true);
+        } else {
+            uiHandler.toggleApiKeyInputState(false);
+        }
+
+        const savedSymbol = localStorage.getItem('lastSymbol');
+        if (savedSymbol) {
+            DOMElements.symbolInput.value = savedSymbol;
+        }
+
+        const savedIsDarkMode = localStorage.getItem('isDarkMode');
+        if (savedIsDarkMode !== null) {
+            isDarkMode = (savedIsDarkMode === 'true');
+            uiHandler.applyTheme(isDarkMode);
+        } else {
+            uiHandler.applyTheme(isDarkMode);
+        }
+
+        const savedInterval = localStorage.getItem('chartInterval');
+        if (savedInterval) {
+            currentInterval = savedInterval;
+            DOMElements.intervalBtns.forEach(btn => {
+                if (btn.dataset.interval === currentInterval) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        } else {
+            document.querySelector('.interval-btn[data-interval="1day"]').classList.add('active');
+        }
+
+        const savedUpColor = localStorage.getItem('upColor');
+        const savedDownColor = localStorage.getItem('downColor');
+        if (savedUpColor && savedDownColor) {
+            DOMElements.upColorInput.value = savedUpColor;
+            DOMElements.downColorInput.value = savedDownColor;
+            uiHandler.updateChartColors();
+        }
+
+        setupPriceScales();
+        setupEventListeners();
+
+        if (savedApiKey && savedSymbol) {
+            loadAllData(DOMElements.symbolInput.value, currentInterval, '', '', savedApiKey);
+        }
+    }
+
+    initApp();
 });
