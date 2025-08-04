@@ -29,7 +29,9 @@ document.addEventListener('DOMContentLoaded', function() {
         upColorInput: document.getElementById('up-color'),
         downColorInput: document.getElementById('down-color'),
         editApiKeyBtn: document.getElementById('edit-api-key-btn'),
-        langSelect: document.getElementById('lang-select'), // 新增語言選擇器
+        langSelect: document.getElementById('lang-select'),
+        // 新增固定報價容器
+        fixedQuotesContainer: document.getElementById('fixed-quotes-container'),
     };
     
     /**
@@ -71,6 +73,9 @@ document.addEventListener('DOMContentLoaded', function() {
             errorInvalidApiKey: 'API 金鑰無效或已過期。請檢查金鑰。',
             errorNoSymbol: '錯誤：請輸入股票代號！',
             errorApi: '載入數據時發生錯誤：',
+            errorDateRange: '錯誤：開始日期必須早於或等於結束日期！',
+            quoteLoading: '報價載入中...',
+            quoteError: '報價連線錯誤',
         },
         'en': {
             title: 'Real-time Stock Chart',
@@ -106,13 +111,14 @@ document.addEventListener('DOMContentLoaded', function() {
             errorInvalidApiKey: 'Invalid or expired API key. Please check your key.',
             errorNoSymbol: 'Error: Please enter a stock symbol!',
             errorApi: 'Error loading data:',
+            errorDateRange: 'Error: Start date must be earlier than or equal to the end date!',
+            quoteLoading: 'Quotes loading...',
+            quoteError: 'Quotes connection error',
         }
     };
     
     /** @type {string} 當前選中的語言 */
     let currentLanguage = 'zh-Hant';
-
-    // ... (其餘的變數、圖表初始化、setupPriceScales 函式等保持不變) ...
     /** @type {string} 當前選中的時間間隔 */
     let currentInterval = '1day';
     /** @type {boolean} 當前是否為暗色模式 */
@@ -174,12 +180,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-
-    // --- 輔助函式 - 語言切換 ---
-
-    /**
-     * 根據當前語言更新頁面上所有帶有 data-i18n 屬性的文字。
-     */
     function setLanguage() {
         document.querySelectorAll('[data-i18n]').forEach(element => {
             const key = element.getAttribute('data-i18n');
@@ -193,11 +193,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 element.placeholder = translations[currentLanguage][key];
             }
         });
-        // 額外處理 theme toggle 按鈕的文字
         DOMElements.themeToggleBtn.textContent = translations[currentLanguage][isDarkMode ? 'toggleThemeButton' : 'toggleThemeButton'].replace('亮色模式', '暗色模式').replace('Light Mode', 'Dark Mode');
     }
-
-    // --- API 服務模組 (無變動) ---
 
     const apiService = {
         fetchTimeSeries: async (symbol, interval, startDate, endDate, apiKey) => {
@@ -246,8 +243,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return await response.json();
         }
     };
-
-    // --- UI 處理模組 ---
 
     const uiHandler = {
         applyTheme: (isDark) => {
@@ -339,12 +334,87 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     };
+    
+    // --- 新增的固定報價邏輯 ---
+    
+    let wsQuotes;
+    const QUOTE_SYMBOLS = "BTC/USD,ETH/USD,XAU/USD,JPY/TWD,USD/TWD,TSM";
+    let reconnectTimeout;
+    const RECONNECT_DELAY = 10000;
 
+    /**
+     * 動態建立報價卡片。
+     * @param {string} symbol - 股票代碼。
+     * @param {string} price - 當前價格。
+     */
+    function createOrUpdateQuoteCard(symbol, price) {
+        let card = document.getElementById(`quote-card-${symbol}`);
+        if (!card) {
+            card = document.createElement('div');
+            card.id = `quote-card-${symbol}`;
+            card.className = 'quote-card';
+            DOMElements.fixedQuotesContainer.appendChild(card);
+        }
+
+        card.innerHTML = `
+            <span class="quote-symbol">${symbol}</span>
+            <span class="quote-price">${parseFloat(price).toFixed(2)}</span>
+        `;
+    }
+
+    /**
+     * 建立 WebSocket 連線並訂閱多個交易對。
+     * @param {string} apiKey - Twelve Data API 金鑰。
+     */
+    function connectFixedQuotesWebSocket(apiKey) {
+        if (!apiKey) {
+            console.error('WebSocket 無法連線：未提供 API 金鑰。');
+            DOMElements.fixedQuotesContainer.innerHTML = `<p>${translations[currentLanguage].quoteError}：請先輸入 API 金鑰。</p>`;
+            return;
+        }
+        
+        DOMElements.fixedQuotesContainer.innerHTML = `<p>${translations[currentLanguage].quoteLoading}</p>`;
+
+        const wsUrl = `wss://ws.twelvedata.com/v1/quotes/price?apikey=${apiKey}`;
+        wsQuotes = new WebSocket(wsUrl);
+
+        wsQuotes.onopen = () => {
+            console.log(`WebSocket 連線已建立，正在訂閱 ${QUOTE_SYMBOLS}`);
+            DOMElements.fixedQuotesContainer.innerHTML = '';
+            wsQuotes.send(JSON.stringify({
+                action: 'subscribe',
+                params: {
+                    symbols: QUOTE_SYMBOLS
+                }
+            }));
+            clearTimeout(reconnectTimeout);
+        };
+
+        wsQuotes.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.event === 'price' && QUOTE_SYMBOLS.includes(data.symbol)) {
+                createOrUpdateQuoteCard(data.symbol, data.price, data.change_point, data.change_percent);
+            }
+        };
+
+        wsQuotes.onclose = () => {
+            console.log('WebSocket 連線已斷開，將於 10 秒後重試...');
+            DOMElements.fixedQuotesContainer.innerHTML = `<p>${translations[currentLanguage].quoteError}，正在重試...</p>`;
+            clearTimeout(reconnectTimeout);
+            reconnectTimeout = setTimeout(() => connectFixedQuotesWebSocket(apiKey), RECONNECT_DELAY);
+        };
+
+        wsQuotes.onerror = (error) => {
+            console.error('WebSocket 錯誤:', error);
+            DOMElements.fixedQuotesContainer.innerHTML = `<p>${translations[currentLanguage].quoteError}！請檢查 API 金鑰。</p>`;
+            wsQuotes.close();
+        };
+    }
+    
     // --- 主程式邏輯 ---
 
     async function loadAllData(symbol, interval, startDate, endDate, apiKey) {
         uiHandler.hideError();
-        uiHandler.hideLoading();
         DOMElements.autocompleteResults.style.display = 'none';
 
         if (!apiKey || apiKey.trim() === '') {
@@ -354,6 +424,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (!symbol || symbol.trim() === '') {
             uiHandler.showError(translations[currentLanguage].errorNoSymbol);
+            return;
+        }
+        
+        if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+            uiHandler.showError(translations[currentLanguage].errorDateRange);
             return;
         }
 
@@ -419,8 +494,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // --- 助手函式 ---
-
     function debounce(func, delay) {
         let timeout;
         return function(...args) {
@@ -444,8 +517,6 @@ document.addEventListener('DOMContentLoaded', function() {
             DOMElements.autocompleteResults.style.display = 'none';
         }
     }, 300);
-
-    // --- 事件監聽器設定 ---
 
     function setupEventListeners() {
         window.addEventListener('resize', () => {
@@ -487,6 +558,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const endDate = DOMElements.endDateInput.value;
             const apiKey = DOMElements.apiKeyInput.value.trim();
             loadAllData(symbol, currentInterval, startDate, endDate, apiKey);
+            connectFixedQuotesWebSocket(apiKey);
         });
 
         DOMElements.intervalBtns.forEach(btn => {
@@ -527,7 +599,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         DOMElements.resetZoomBtn.addEventListener('click', () => {
-            const defaultVisibleBars = 90;
+            const defaultVisibleBars = 200;
             if (lastLoadedDataCount > 0) {
                 const logicalRange = {
                     from: Math.max(0, lastLoadedDataCount - defaultVisibleBars),
@@ -580,26 +652,21 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.removeItem('twelveDataApiKey');
         });
 
-        // 新增：語言選擇器的事件監聽器
         DOMElements.langSelect.addEventListener('change', (e) => {
             currentLanguage = e.target.value;
             localStorage.setItem('language', currentLanguage);
             setLanguage();
-            // 由於 themeToggleBtn 的文字需要特別處理，所以這裡需要更新
             uiHandler.applyTheme(isDarkMode); 
         });
     }
 
-    // --- 啟動函式 ---
-
     function initApp() {
-        // 從 localStorage 載入語言設定，否則使用預設
         const savedLanguage = localStorage.getItem('language');
         if (savedLanguage && translations[savedLanguage]) {
             currentLanguage = savedLanguage;
             DOMElements.langSelect.value = savedLanguage;
         }
-        setLanguage(); // 在啟動時設定一次語言
+        setLanguage();
 
         const savedApiKey = localStorage.getItem('twelveDataApiKey');
         if (savedApiKey) {
@@ -649,6 +716,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (savedApiKey && savedSymbol) {
             loadAllData(DOMElements.symbolInput.value, currentInterval, '', '', savedApiKey);
+        }
+        
+        // 在應用程式初始化時，如果 API 金鑰存在，則呼叫固定報價 WebSocket 連線
+        if (savedApiKey) {
+            connectFixedQuotesWebSocket(savedApiKey);
+        } else {
+            console.warn('未偵測到 API 金鑰，固定報價功能將不會啟動。');
+            DOMElements.fixedQuotesContainer.innerHTML = `<p>${translations[currentLanguage].quoteError}：請先輸入 API 金鑰。</p>`;
         }
     }
 

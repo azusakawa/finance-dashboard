@@ -3,91 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="title"></title>
+    <title data-i18n="title">即時股票圖表</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
 </head>
-<body class="dark-theme">
-
+<body>
     <div class="container">
-        <header class="page-header">
-            <h1 data-i18n="title"></h1>
-            <div class="language-selector">
-                <label for="lang-select" data-i18n="language"></label>
-                <select id="lang-select">
-                    <option value="zh-Hant">繁體中文</option>
-                    <option value="en">English</option>
-                </select>
+        <header>
+            <h1 data-i18n="title">即時股票圖表</h1>
+            <div class="controls-top">
+                <div class="control-group">
+                    <label for="lang-select" data-i18n="language">語言:</label>
+                    <select id="lang-select">
+                        <option value="zh-Hant">繁體中文</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
             </div>
         </header>
 
-        <div class="control-group">
-            <div class="input-item api-key-input-container">
-                <label for="api-key-input" data-i18n="apiKeyLabel"></label>
-                <input type="text" id="api-key-input" data-i18n-placeholder="apiKeyPlaceholder">
-                <span id="api-key-status">
-                    <span data-i18n="apiKeySaved"></span>
-                    <button id="edit-api-key-btn" class="secondary-btn" data-i18n="editButton"></button>
-                </span>
+        <div id="fixed-quotes-container">
             </div>
-            <a href="https://twelvedata.com/register" target="_blank" class="api-link" data-i18n="apiRegisterLink"></a>
-        </div>
 
-        <div class="control-group">
-            <div class="input-item symbol-input-container">
-                <label for="symbol-input" data-i18n="symbolLabel"></label>
-                <input type="text" id="symbol-input" data-i18n-placeholder="symbolPlaceholder">
-                <div id="autocomplete-results"></div>
+        <div class="controls-panel">
+            <div class="control-group">
+                <label data-i18n="apiKeyLabel">API 金鑰:</label>
+                <div class="api-key-input-container">
+                    <input type="password" id="api-key-input" placeholder="請輸入你的 Twelve Data API 金鑰" data-i18n-placeholder="apiKeyPlaceholder">
+                    <div id="api-key-status" style="display: none;">
+                        <span data-i18n="apiKeySaved">API 金鑰已儲存！</span>
+                        <button id="edit-api-key-btn" class="secondary-btn" data-i18n="editButton">編輯</button>
+                    </div>
+                </div>
+                <small><a href="https://twelvedata.com/forex-historical-data" target="_blank" data-i18n="apiRegisterLink">註冊 Twelve Data API 金鑰</a></small>
             </div>
-            <button id="load-data-btn" class="primary-btn" data-i18n="loadDataButton"></button>
-        </div>
 
-        <div class="control-group interval-buttons">
-            <label data-i18n="intervalLabel"></label>
-            <button class="interval-btn active" data-interval="1day">1D</button>
-            <button class="interval-btn" data-interval="1week">1W</button>
-            <button class="interval-btn" data-interval="1month">1M</button>
-            <div class="date-range">
+            <div class="control-group">
                 <div class="input-item">
-                    <label for="start-date" data-i18n="startDateLabel"></label>
+                    <label for="symbol-input" data-i18n="symbolLabel">股票代號:</label>
+                    <input type="text" id="symbol-input" placeholder="例如: AAPL, TSLA" data-i18n-placeholder="symbolPlaceholder">
+                    <div id="autocomplete-results" class="autocomplete-list"></div>
+                </div>
+                <button id="load-data-btn" class="primary-btn" data-i18n="loadDataButton">載入數據</button>
+            </div>
+            
+            <div class="control-group">
+                <label data-i18n="intervalLabel">時間間隔:</label>
+                <div class="interval-buttons">
+                    <button class="interval-btn" data-interval="1day">1D</button>
+                    <button class="interval-btn" data-interval="1week">1W</button>
+                    <button class="interval-btn" data-interval="1month">1M</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="input-item">
+                    <label for="start-date" data-i18n="startDateLabel">開始日期:</label>
                     <input type="date" id="start-date">
                 </div>
                 <div class="input-item">
-                    <label for="end-date" data-i18n="endDateLabel"></label>
+                    <label for="end-date" data-i18n="endDateLabel">結束日期:</label>
                     <input type="date" id="end-date">
                 </div>
             </div>
+
+            <div class="control-group">
+                <label data-i18n="visualSettingsLabel">視覺化設定:</label>
+                <div class="input-item">
+                    <label for="up-color" data-i18n="upColorLabel">上漲 K 線:</label>
+                    <input type="color" id="up-color" value="#26a69a">
+                </div>
+                <div class="input-item">
+                    <label for="down-color" data-i18n="downColorLabel">下跌 K 線:</label>
+                    <input type="color" id="down-color" value="#ef5350">
+                </div>
+            </div>
+
+            <div class="control-group">
+            </div>
+            
+            <div id="error-message" class="error-message"></div>
         </div>
 
-        <div class="control-group">
-            <label data-i18n="visualSettingsLabel"></label>
-            <div class="color-picker-group">
-                <label for="up-color" data-i18n="upColorLabel"></label>
-                <input type="color" id="up-color" value="#26a69a">
+        <main class="chart-main">
+            <div id="chart-container" class="chart-container">
+                <div id="loading-indicator" class="loading-indicator">
+                    <div class="loader"></div>
+                    <span>載入數據...</span>
+                </div>
             </div>
-            <div class="color-picker-group">
-                <label for="down-color" data-i18n="downColorLabel"></label>
-                <input type="color" id="down-color" value="#ef5350">
+            <div id="tooltip-container" class="tooltip"></div>
+            
+            <div class="chart-controls">
+                <button id="zoom-in-btn" class="chart-control-btn" data-i18n="zoomInButton">放大 (+)</button>
+                <button id="zoom-out-btn" class="chart-control-btn" data-i18n="zoomOutButton">縮小 (-)</button>
+                <button id="reset-zoom-btn" class="chart-control-btn" data-i18n="resetZoomButton">重設縮放 (R)</button>
+                <button id="theme-toggle-btn" class="chart-control-btn theme-toggle-btn" data-i18n="toggleThemeButton">亮色模式</button>
             </div>
-        </div>
-
-        <div id="chart-container">
-            <div id="tooltip-container"></div>
-            <div id="loading-indicator">
-                <div class="loader"></div>
-                <span data-i18n="loadingText"></span>
-            </div>
-        </div>
-        
-        <div class="control-group">
-            <button id="zoom-in-btn" class="secondary-btn" data-i18n="zoomInButton"></button>
-            <button id="zoom-out-btn" class="secondary-btn" data-i18n="zoomOutButton"></button>
-            <button id="reset-zoom-btn" class="secondary-btn" data-i18n="resetZoomButton"></button>
-            <div style="flex-grow: 1;"></div>
-            <button id="theme-toggle-btn" class="secondary-btn" data-i18n="toggleThemeButton"></button>
-        </div>
-
-        <div id="error-message"></div>
+        </main>
     </div>
 
     <script src="script.js"></script>

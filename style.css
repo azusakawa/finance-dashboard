@@ -1,395 +1,419 @@
-/*
-  ==============================================
-  CSS 變數 - 顏色、間距、圓角等通用設定
-  ==============================================
-*/
-
+/* 基礎設定 */
 :root {
-    /* 暗色主題顏色變數 */
-    --background-color: #121212;
-    --text-color: #e0e0e0;
-    --primary-color: #007bff; /* 主要按鈕顏色 */
-    --control-group-bg: #1e1e1e; /* 控制面板背景色 */
-    --border-color: #555;
-    --input-bg: #222;
-    --input-color: #f1f1f1;
-    --button-bg: #333;
-    --button-color: #f1f1f1;
-    --button-hover-bg: #555;
-    --button-hover-border: #777;
-    --secondary-button-bg: #444;
+    /* 顏色變數 */
+    --background-color: #1a1a2e;
+    --control-panel-bg: #162447;
+    --control-group-bg: #1f4068;
+    --card-bg: #162447;
+    --text-color: #e4e6eb;
+    --secondary-text-color: #b0b3b8;
+    --accent-color: #e94560;
+    --border-color: #2c3a57;
+    --chart-grid-color: #3b4d6b;
+    --hover-color: #295188;
+    --shadow-color: rgba(0, 0, 0, 0.4);
     --link-color: #0096ff;
-    --chart-grid-color: rgba(70, 70, 70, 0.5);
-    --tooltip-bg: rgba(255, 255, 255, 0.9);
-    --tooltip-color: #191919;
-    --autocomplete-bg: #1e1e1e;
-    --autocomplete-hover-bg: #3a3a3a;
-    --error-message-bg: rgba(255, 0, 0, 0.2);
-    --error-message-color: #ffcccc;
+    --up-color: #26a69a;
+    --down-color: #ef5350;
 
-    /* 通用間距與圓角 */
-    --gap-sm: 8px;
-    --gap-md: 15px;
-    --gap-lg: 25px;
+    /* 邊距與圓角 */
+    --padding-sm: 8px;
+    --padding-md: 16px;
+    --padding-lg: 24px;
     --border-radius: 8px;
-    --transition-speed: 0.3s;
 }
 
 /* 亮色主題顏色變數 */
 .light-theme {
     --background-color: #f0f2f5;
-    --text-color: #1a1a1a;
-    --primary-color: #007bff;
-    --control-group-bg: #ffffff;
-    --border-color: #ccc;
-    --input-bg: #f8f9fa;
-    --input-color: #1a1a1a;
-    --button-bg: #e9ecef;
-    --button-color: #333;
-    --button-hover-bg: #dee2e6;
-    --button-hover-border: #adb5bd;
-    --secondary-button-bg: #e9ecef;
+    --control-panel-bg: #ffffff;
+    --control-group-bg: #f8f9fa;
+    --card-bg: #f0f2f5;
+    --text-color: #1f2d3d;
+    --secondary-text-color: #5a5e67;
+    --accent-color: #d9415c;
+    --border-color: #e9ecef;
+    --chart-grid-color: #dee2e6;
+    --hover-color: #e9ecef;
+    --shadow-color: rgba(0, 0, 0, 0.1);
     --link-color: #0056b3;
-    --chart-grid-color: rgba(215, 215, 215, 0.5);
-    --tooltip-bg: rgba(0, 0, 0, 0.8);
-    --tooltip-color: #ffffff;
-    --autocomplete-bg: #ffffff;
-    --autocomplete-hover-bg: #f0f0f0;
-    --error-message-bg: rgba(255, 0, 0, 0.1);
-    --error-message-color: #ff3333;
+    --up-color: #2e7d32;
+    --down-color: #e53935;
 }
 
-/*
-  ==============================================
-  通用樣式
-  ==============================================
-*/
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--background-color);
     color: var(--text-color);
     margin: 0;
-    padding: 0;
-    transition: background-color var(--transition-speed), color var(--transition-speed);
+    padding: var(--padding-lg);
+    transition: background-color 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
 }
 
 .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: var(--gap-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--padding-md);
+    max-width: 1400px;
+    width: 100%;
 }
 
-/* 新增：頁面標頭樣式 */
-.page-header {
+header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--gap-lg);
+    padding-bottom: var(--padding-sm);
+    border-bottom: 2px solid var(--border-color);
 }
 
 h1 {
-    text-align: center;
+    font-size: 2rem;
+    margin: 0;
     color: var(--text-color);
-    margin-bottom: 0;
-    font-size: clamp(2rem, 5vw, 3rem);
 }
 
-/* 新增：語言選擇器樣式 */
-.language-selector {
+.controls-top {
     display: flex;
     align-items: center;
-    gap: var(--gap-sm);
-    margin-left: auto; /* 將其推到最右邊 */
+    gap: var(--padding-md);
 }
-.language-selector label {
-    font-size: 14px;
-}
-.language-selector select {
-    padding: 5px 8px;
-    border: 1px solid var(--border-color);
+
+.controls-panel {
+    background-color: var(--control-panel-bg);
     border-radius: var(--border-radius);
-    background-color: var(--input-bg);
-    color: var(--input-color);
-    cursor: pointer;
-}
-
-
-/*
-  ==============================================
-  控制面板樣式
-  ==============================================
-*/
-.control-group {
+    padding: var(--padding-md);
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: var(--gap-md);
-    margin-bottom: var(--gap-lg);
-    padding: var(--gap-md);
+    gap: var(--padding-md);
+    box-shadow: 0 4px 10px var(--shadow-color);
+}
+
+.control-group {
     background-color: var(--control-group-bg);
     border-radius: var(--border-radius);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    transition: background-color var(--transition-speed);
+    padding: var(--padding-md);
+    flex: 1;
+    min-width: 250px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--padding-sm);
+}
+
+.control-group label {
+    font-weight: bold;
+    color: var(--text-color);
 }
 
 .input-item {
-    display: flex;
-    align-items: center;
-    gap: var(--gap-sm);
+    display: center;
+    flex-direction: column;
+    gap: 5px;
     position: relative;
 }
 
-.date-range {
-    display: flex;
-    gap: var(--gap-md);
-}
-
-.color-picker-group {
-    display: flex;
-    align-items: center;
-    gap: var(--gap-sm);
-}
-
-.api-link {
-    color: var(--link-color);
-    text-decoration: none;
-    white-space: nowrap;
-    transition: color var(--transition-speed);
-}
-
-.api-link:hover {
-    text-decoration: underline;
-}
-
-/*
-  ==============================================
-  輸入框、按鈕與狀態樣式
-  ==============================================
-*/
-
-input[type="text"], input[type="date"], input[type="color"] {
-    padding: 8px 15px;
+input[type="text"],
+input[type="date"],
+input[type="number"],
+input[type="password"],
+select {
+    width: 100%;
+    padding: var(--padding-sm);
     border: 1px solid var(--border-color);
-    background-color: var(--input-bg);
-    color: var(--input-color);
     border-radius: 4px;
-    font-size: 14px;
-    transition: background-color var(--transition-speed), border-color var(--transition-speed);
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
 }
 
-input[type="text"]:focus, input[type="date"]:focus {
+input:focus,
+select:focus {
     outline: none;
-    border-color: var(--primary-color);
+    border-color: var(--accent-color);
 }
 
-button {
-    padding: 8px 15px;
-    border: 1px solid var(--border-color);
-    background-color: var(--button-bg);
-    color: var(--button-color);
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color var(--transition-speed), color var(--transition-speed), border-color var(--transition-speed);
-}
-
-button:hover {
-    background-color: var(--button-hover-bg);
-    border-color: var(--button-hover-border);
-}
-
-.primary-btn {
-    background-color: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-.primary-btn:hover {
-    background-color: #0056b3;
-    border-color: #0056b3;
-}
-
-.secondary-btn {
-    background-color: var(--secondary-button-bg);
-    color: var(--button-color);
-    border-color: var(--border-color);
-}
-.secondary-btn:hover {
-    background-color: var(--button-hover-bg);
-}
-
-.interval-btn.active {
-    background-color: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
-.interval-btn.active:hover {
-    background-color: #0056b3;
+.api-key-input-container {
+    display: flex;
+    gap: var(--padding-sm);
 }
 
 #api-key-status {
-    color: #4CAF50;
-    font-size: 14px;
-    display: none;
+    display: flex;
     align-items: center;
-    gap: var(--gap-sm);
-    white-space: nowrap;
-    transition: color var(--transition-speed);
-}
-.light-theme #api-key-status {
-    color: #2e7d32;
+    gap: var(--padding-sm);
 }
 
-#edit-api-key-btn {
-    font-size: 12px;
-    padding: 4px 8px;
-    margin-left: 0; /* 移除 flex 帶來的額外間距 */
+#api-key-status span {
+    font-size: 0.9rem;
+    color: var(--accent-color);
 }
 
-/*
-  ==============================================
-  自動完成樣式
-  ==============================================
-*/
-
-#autocomplete-results {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background-color: var(--autocomplete-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 0 0 var(--border-radius) var(--border-radius);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    max-height: 200px;
-    overflow-y: auto;
-    z-index: 10;
-    display: none;
-}
-#autocomplete-results div {
-    padding: 10px;
+button {
+    padding: var(--padding-sm) var(--padding-md);
+    border: none;
+    border-radius: 4px;
     cursor: pointer;
-    border-bottom: 1px solid var(--border-color);
-    color: var(--text-color);
-    transition: background-color var(--transition-speed);
-}
-#autocomplete-results div:last-child {
-    border-bottom: none;
-}
-#autocomplete-results div:hover {
-    background-color: var(--autocomplete-hover-bg);
+    font-size: 1rem;
+    transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
+.primary-btn {
+    background-color: var(--accent-color);
+    color: #fff;
+}
 
-/*
-  ==============================================
-  圖表與載入指示器樣式
-  ==============================================
-*/
-#chart-container {
-    width: 100%;
-    height: 600px;
+.primary-btn:hover {
+    background-color: #d93d56;
+}
+
+.primary-btn:active {
+    transform: translateY(1px);
+}
+
+.secondary-btn {
     background-color: var(--control-group-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+
+.secondary-btn:hover {
+    background-color: var(--hover-color);
+}
+
+.interval-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.interval-btn {
+    flex: 1 1 auto;
+    background-color: var(--control-panel-bg);
+    border: 1px solid var(--border-color);
+    color: var(--secondary-text-color);
+    min-width: 40px;
+}
+
+.interval-btn.active {
+    background-color: var(--accent-color);
+    color: #fff;
+    border-color: var(--accent-color);
+}
+
+.error-message {
+    color: var(--down-color);
+    background-color: rgba(239, 83, 80, 0.2);
+    border: 1px solid var(--down-color);
+    padding: var(--padding-sm);
+    border-radius: var(--border-radius);
+    text-align: center;
+    display: none;
+    width: 100%;
+}
+
+.chart-main {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--padding-md);
+}
+
+.chart-container {
+    height: 600px;
+    background-color: var(--control-panel-bg);
     border-radius: var(--border-radius);
     overflow: hidden;
     position: relative;
-    transition: background-color var(--transition-speed);
-}
-#chart-container.loading {
-    filter: blur(2px);
-    transition: filter 0.5s ease;
+    box-shadow: 0 4px 10px var(--shadow-color);
+    transition: opacity 0.3s ease;
 }
 
-#tooltip-container {
-    position: absolute;
-    z-index: 1000;
-    padding: 10px;
-    background-color: var(--tooltip-bg);
-    color: var(--tooltip-color);
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
-    display: none;
-    pointer-events: none;
-    transition: background-color var(--transition-speed), color var(--transition-speed);
+.chart-container.loading {
+    opacity: 0.6;
 }
 
-#loading-indicator {
+.loading-indicator {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 1000;
     display: none;
-    padding: 20px 30px;
-    background-color: rgba(0, 0, 0, 0.7);
-    border-radius: var(--border-radius);
-    color: white;
-    text-align: center;
-    font-size: 16px;
-    font-weight: bold;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--padding-sm);
 }
 
 .loader {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid var(--primary-color);
+    border: 4px solid var(--control-group-bg);
+    border-top: 4px solid var(--accent-color);
     border-radius: 50%;
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
     animation: spin 1s linear infinite;
-    margin: 0 auto 10px;
 }
+
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
-#error-message {
-    color: var(--error-message-color);
-    background-color: var(--error-message-bg);
-    padding: 10px;
+.chart-controls {
+    display: flex;
+    justify-content: center;
+    gap: var(--padding-sm);
+}
+
+.chart-control-btn {
+    background-color: var(--control-panel-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+
+.chart-control-btn:hover {
+    background-color: var(--hover-color);
+}
+
+.tooltip {
+    position: absolute;
+    background-color: var(--control-panel-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
-    text-align: center;
-    margin-top: 15px;
+    padding: var(--padding-sm);
+    font-size: 0.9rem;
+    pointer-events: none;
+    z-index: 100;
+    box-shadow: 0 2px 5px var(--shadow-color);
     display: none;
 }
 
-/*
-  ==============================================
-  響應式設計
-  ==============================================
-*/
+a {
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.theme-toggle-btn {
+    margin-left: auto;
+}
+
+.autocomplete-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: var(--control-group-bg);
+    border: 1px solid var(--border-color);
+    border-top: none;
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 50;
+    display: none;
+}
+
+.autocomplete-list div {
+    padding: var(--padding-sm);
+    cursor: pointer;
+}
+
+.autocomplete-list div:hover {
+    background-color: var(--hover-color);
+}
+
+/* 固定報價樣式 */
+#fixed-quotes-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--padding-md);
+    justify-content: flex-start;
+    padding: var(--padding-sm) 0;
+}
+
+.quote-card {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: var(--padding-sm) var(--padding-md);
+    display: flex;
+    flex-direction: column;
+    min-width: 150px;
+    flex: 1 1 auto;
+    text-align: center;
+    box-shadow: 0 2px 5px var(--shadow-color);
+    transition: background-color 0.3s ease, border-left-color 0.3s ease;
+    border-left: 4px solid var(--border-color);
+}
+
+.quote-card.up {
+    border-left-color: var(--up-color);
+}
+
+.quote-card.down {
+    border-left-color: var(--down-color);
+}
+
+.quote-symbol {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+.quote-price {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 4px 0;
+}
+
+.quote-change {
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.quote-card.up .quote-change {
+    color: var(--up-color);
+}
+
+.quote-card.down .quote-change {
+    color: var(--down-color);
+}
+
+.quote-change svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+    margin-right: 2px;
+}
+
+/* 響應式設計 */
 @media (max-width: 768px) {
-    .control-group {
-        flex-direction: column;
-        align-items: stretch;
+    body {
+        padding: var(--padding-md);
     }
-
-    .date-range {
-        flex-direction: column;
-    }
-    
-    .date-range .input-item {
-        width: 100%;
-    }
-    
-    .date-range .input-item input {
-        width: 100%;
-        box-sizing: border-box; /* 確保 padding 和 border 不會超出寬度 */
-    }
-
-    .page-header {
-        flex-direction: column;
-        gap: var(--gap-sm);
-        text-align: center;
-    }
-    
-    .language-selector {
-        margin-left: 0;
-    }
-
     h1 {
-        margin-bottom: 0;
+        font-size: 1.5rem;
+    }
+    .controls-panel {
+        flex-direction: column;
+    }
+    .control-group {
+        min-width: unset;
+    }
+    .controls-top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .quote-card {
+        flex: 1 1 100%;
+        min-width: unset;
     }
 }
